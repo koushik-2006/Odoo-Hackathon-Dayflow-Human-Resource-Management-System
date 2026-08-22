@@ -2,8 +2,7 @@
 
 > **Project Name:** Dayflow - Human Resource Management System  
 > **Tagline:** *Every workday, perfectly aligned.*  
-> **Current Status:** Modules 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 (COMPLETE)  
-> **Next Module:** Module 12 — Password Reset Tokens (NEXT)  
+> **Database Status:** Modules 1–12 (ALL PLANNED MODULES COMPLETE)  
 > **Database Engine:** PostgreSQL (Version 14+)  
 > **Database Name:** `dayflow`  
 > **Default Host:** `localhost`  
@@ -25,7 +24,7 @@ The **Dayflow HRMS** PostgreSQL database serves as the centralized, reliable, an
 - **In-App Notifications & Alerts (Module 9):** Targeted user notifications, read/unread states, event classifiers, and polymorphic application referencing.
 - **Document Management & Verification (Module 10):** Centralized employee document repository metadata, file paths / object storage URLs, MIME validation, file sizes, and administrative verification workflows (`PENDING`, `VERIFIED`, `REJECTED`).
 - **Audit Logs & Compliance Ledger (Module 11):** Immutable, append-only historical audit trail capturing security events, authentication, profile updates, approval workflows, payroll calculations, and document operations with JSONB before/after snapshots and network provenance (`INET`).
-- **Account Recovery (Module 12):** Password reset tokens and security lifecycle.
+- **Password Reset & Account Recovery (Module 12):** Secure hashed one-time token storage, expiration timestamps, single-use consumption (`used_at`), and invalidation/revocation tracking (`revoked_at`).
 
 ---
 
@@ -222,9 +221,29 @@ The `audit_logs` table provides an immutable, append-only historical audit trail
   - `user_agent`: `TEXT NULL` (Client browser / device user-agent string)
   - `request_id`: `VARCHAR(100) NULL` (Backend correlation identifier)
   - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
-- **Architecture & Security Rules:**
-  - **Strict Immutability:** Append-only ledger without update or delete triggers.
-  - **Zero Credential Exposure:** Passwords, password hashes, JWTs, bearer tokens, API keys, and secrets are strictly excluded from JSONB payloads.
+
+---
+
+### Module 12: Password Reset Tokens (Secure Account Recovery)
+The `password_reset_tokens` table securely stores cryptographic hashes of single-use password reset verification tokens, expiration timestamps, and consumption states.
+
+- **Columns:**
+  - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `user_id`: `UUID NOT NULL` (N:1 with `users.id` on delete `CASCADE`)
+  - `token_hash`: `VARCHAR(255) NOT NULL` (Cryptographic hash e.g., SHA-256 or bcrypt)
+  - `expires_at`: `TIMESTAMPTZ NOT NULL` (Time-to-live threshold)
+  - `used_at`: `TIMESTAMPTZ NULL` (Timestamp when consumed; NULL if unused)
+  - `revoked_at`: `TIMESTAMPTZ NULL` (Timestamp when explicitly invalidated; NULL if active)
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Security & Lifecycle Validation:**
+  - **Zero Plaintext Tokens:** Raw tokens are emailed directly to users and never stored in PostgreSQL.
+  - **Active State Rule:** `used_at IS NULL AND revoked_at IS NULL AND expires_at > CURRENT_TIMESTAMP`.
+  - **Maintenance Cleanup:** Expired or consumed records can be purged via scheduled maintenance:
+    ```sql
+    DELETE FROM password_reset_tokens
+    WHERE expires_at < CURRENT_TIMESTAMP OR used_at IS NOT NULL OR revoked_at IS NOT NULL;
+    ```
 
 ---
 
@@ -245,54 +264,77 @@ The `audit_logs` table provides an immutable, append-only historical audit trail
 │  Module 9  │ Notifications               │  COMPLETE   │
 │  Module 10 │ Documents                   │  COMPLETE   │
 │  Module 11 │ Audit Logs                  │  COMPLETE   │
-│  Module 12 │ Password Reset              │    NEXT     │
+│  Module 12 │ Password Reset Tokens       │  COMPLETE   │
 └────────────┴─────────────────────────────┴─────────────┘
 ```
 
-### Entity Relationship Diagram (Modules 2–11)
+### Complete Entity Relationship Diagram (Modules 2–12)
 
 ```text
-    users (Module 2)              departments (Module 3)
-   ┌─────────────────┐           ┌────────────────────┐
-   │ id (UUID PK)    │           │ id (UUID PK)       │
-   │ email (UQ)      │           │ name (UQ)          │
-   │ password_hash   │           │ code (UQ)          │
-   │ role            │           │ is_active          │
-   └───────┬─────────┘           └─────────┬──────────┘
-           │ 1                             │ 1
-           ├───────────────┬───────────────┼───────────────┐
-           │ 1             │ 1             │ 1             │ 1
-   ┌───────▼─────────┐ ┌───▼─────────┐ ┌───▼───────────────▼──────────┐
-   │ audit_logs (M11)│ │notifications│ │ employees (Module 4)         │
-   │ --------------- │ │ (Module 9)  │ │ ---------------------------- │
-   │ id      UUID PK │ │ ----------- │ │ id           UUID PRIMARY KEY│
-   │ user_id UUID FK │ │ id  UUID PK │ │ user_id      UUID NOT NULL FK│
-   │ action  VARCHAR │ │ user_id  FK │ │ department_id UUID NULL FK   │
-   │ old_values JSONB│ │ type VARCHAR│ │ employee_code VARCHAR UNIQUE │
-   │ new_values JSONB│ │ is_read BOOL│ │ first_name   VARCHAR         │
-   └─────────────────┘ └─────────────┘ └───────┬──────┬───────┬───────┘
-                                               │ 1    │ 1     │ 1
-                                               │      │       │
-                                               │ N    │ N     │ N
-                                      ┌────────▼─┐ ┌──▼────┐ ┌▼──────────────┐
-                                      │attendance│ │leave  │ │ documents     │
-                                      │(Module 5)│ │request│ │ (Module 10)   │
-                                      │          │ │(M7)   │ │ ------------- │
-                                      │          │ │       │ │ id    UUID PK │
-                                      │          │ │       │ │ employee_id FK│
-                                      │          │ │       │ │ doc_type      │
-                                      │          │ │       │ │ file_url      │
-                                      │          │ │       │ │ ver_status    │
-                                      └──────────┘ └───────┘ └───────────────┘
-                                                      │
-                                                   ┌──▼──────────────┐
-                                                   │ payroll (Mod 8) │
-                                                   │ --------------- │
-                                                   │ id      UUID PK │
-                                                   │ employee_id  FK │
-                                                   │ net_salary      │
-                                                   │ status          │
-                                                   └─────────────────┘
+                                departments (Module 3)
+                               ┌────────────────────┐
+                               │ id (UUID PK)       │
+                               │ name (UQ)          │
+                               │ code (UQ)          │
+                               │ is_active          │
+                               └─────────┬──────────┘
+                                         │ 1
+                                         │
+                                         │ N
+                               ┌─────────▼────────────────────┐
+                               │ employees (Module 4)         │
+                               │ ---------------------------- │
+                               │ id           UUID PRIMARY KEY│
+                               │ user_id      UUID NOT NULL FK│
+                               │ department_id UUID NULL FK   │
+                               │ employee_code VARCHAR UNIQUE │
+                               │ first_name   VARCHAR         │
+                               └───────┬──────┬───────┬───────┘
+                                       │ 1    │ 1     │ 1
+                                       │      │       │
+                                       │ N    │ N     │ N
+                              ┌────────▼─┐ ┌──▼────┐ ┌▼──────────────┐
+                              │attendance│ │leave  │ │ documents     │
+                              │(Module 5)│ │request│ │ (Module 10)   │
+                              │          │ │(M7)   │ │ ------------- │
+                              │          │ │       │ │ id    UUID PK │
+                              │          │ │       │ │ employee_id FK│
+                              │          │ │       │ │ file_url      │
+                              │          │ │       │ │ ver_status    │
+                              └──────────┘ └───────┘ └───────────────┘
+                                              │
+                                           ┌──▼──────────────┐
+                                           │ payroll (Mod 8) │
+                                           │ --------------- │
+                                           │ id      UUID PK │
+                                           │ employee_id  FK │
+                                           │ net_salary      │
+                                           │ status          │
+                                           └─────────────────┘
+                                         ▲
+                                         │ 1:1
+                                         │
+                              ┌──────────┴───────┐
+                              │ users (Module 2) │
+                              │ ---------------- │
+                              │ id (UUID PK)     │
+                              │ email (UQ)       │
+                              │ password_hash    │
+                              │ role             │
+                              └───────┬───┬───┬──┘
+                                      │   │   │
+                     ┌────────────────┘   │   └────────────────┐
+                     │ 1:N                │ 1:N                │ 1:N
+             ┌───────▼─────────┐  ┌───────▼─────────┐  ┌───────▼─────────┐
+             │ notifications   │  │ audit_logs      │  │ password_reset  │
+             │ (Module 9)      │  │ (Module 11)     │  │ (Module 12)     │
+             │ --------------- │  │ --------------- │  │ --------------- │
+             │ id      UUID PK │  │ id      UUID PK │  │ id      UUID PK │
+             │ user_id UUID FK │  │ user_id UUID FK │  │ user_id UUID FK │
+             │ type    VARCHAR │  │ action  VARCHAR │  │ token_hash  CHAR│
+             │ is_read BOOLEAN │  │ old_values JSONB│  │ expires_at  TIME│
+             │ ref_type, ref_id│  │ new_values JSONB│  │ used_at     TIME│
+             └─────────────────┘  └─────────────────┘  └─────────────────┘
 ```
 
 ---
@@ -302,32 +344,34 @@ The `audit_logs` table provides an immutable, append-only historical audit trail
 ```text
 database/
 ├── migrations/
-│   ├── README.md                    # Migration versioning rules and roadmap
-│   ├── V1__create_users.sql         # Migration V1: users table (ADMIN, HR, EMPLOYEE)
-│   ├── V2__create_departments.sql   # Migration V2: departments table, triggers, constraints
-│   ├── V3__create_employees.sql     # Migration V3: employees table (1:1 users, N:1 departments)
-│   ├── V4__create_attendance.sql    # Migration V4: attendance table (1:N employees, unique date)
-│   ├── V5__create_leave_types.sql   # Migration V5: leave_types master policy table
-│   ├── V6__create_leave_requests.sql# Migration V6: leave_requests employee applications
-│   ├── V7__create_payroll.sql       # Migration V7: payroll employee compensation table
-│   ├── V8__create_notifications.sql # Migration V8: notifications user alerts table
-│   ├── V9__create_documents.sql     # Migration V9: documents employee metadata table
-│   └── V10__create_audit_logs.sql   # Migration V10: audit_logs immutable compliance ledger
+│   ├── README.md                          # Migration versioning rules and roadmap
+│   ├── V1__create_users.sql               # Migration V1: users table (ADMIN, HR, EMPLOYEE)
+│   ├── V2__create_departments.sql         # Migration V2: departments table, triggers, constraints
+│   ├── V3__create_employees.sql           # Migration V3: employees table (1:1 users, N:1 departments)
+│   ├── V4__create_attendance.sql          # Migration V4: attendance table (1:N employees, unique date)
+│   ├── V5__create_leave_types.sql         # Migration V5: leave_types master policy table
+│   ├── V6__create_leave_requests.sql      # Migration V6: leave_requests employee applications
+│   ├── V7__create_payroll.sql             # Migration V7: payroll employee compensation table
+│   ├── V8__create_notifications.sql       # Migration V8: notifications user alerts table
+│   ├── V9__create_documents.sql           # Migration V9: documents employee metadata table
+│   ├── V10__create_audit_logs.sql         # Migration V10: audit_logs immutable compliance ledger
+│   └── V11__create_password_reset_tokens.sql # Migration V11: password_reset_tokens security table
 ├── seeds/
-│   ├── README.md                    # Seed data execution dependencies and rules
-│   ├── departments.sql              # Seed data for baseline departments (IT, HR, FIN, MKT, SALES, OPS)
-│   ├── users.sql                    # Seed data for demo user accounts (ADMIN, HR, EMPLOYEE)
-│   ├── employees.sql                # Seed data for demo employee profiles
-│   ├── attendance.sql               # Seed data for multi-day employee attendance logs
-│   ├── leave_types.sql              # Seed data for baseline leave categories (PAID, SICK, UNPAID)
-│   ├── leave_requests.sql           # Seed data for demo leave requests (PENDING, APPROVED, REJECTED)
-│   ├── payroll.sql                  # Seed data for multi-period employee payroll records
-│   ├── notifications.sql            # Seed data for demo in-app alerts and notifications
-│   ├── documents.sql                # Seed data for demo employee document metadata
-│   └── audit_logs.sql               # Seed data for demo security and activity audit records
-├── schema.sql                       # Master schema definition & active tables
-├── seed.sql                         # Master seed orchestration script (strict dependency order)
-└── README.md                        # Master database documentation (this file)
+│   ├── README.md                          # Seed data execution dependencies and rules
+│   ├── departments.sql                    # Seed data for baseline departments (IT, HR, FIN, MKT, SALES, OPS)
+│   ├── users.sql                          # Seed data for demo user accounts (ADMIN, HR, EMPLOYEE)
+│   ├── employees.sql                      # Seed data for demo employee profiles
+│   ├── attendance.sql                     # Seed data for multi-day employee attendance logs
+│   ├── leave_types.sql                    # Seed data for baseline leave categories (PAID, SICK, UNPAID)
+│   ├── leave_requests.sql                 # Seed data for demo leave requests (PENDING, APPROVED, REJECTED)
+│   ├── payroll.sql                        # Seed data for multi-period employee payroll records
+│   ├── notifications.sql                  # Seed data for demo in-app alerts and notifications
+│   ├── documents.sql                      # Seed data for demo employee document metadata
+│   ├── audit_logs.sql                     # Seed data for demo security and activity audit records
+│   └── password_reset_tokens.sql          # Seed data for demo password reset lifecycle states
+├── schema.sql                             # Master schema definition & active tables
+├── seed.sql                               # Master seed orchestration script (strict dependency order)
+└── README.md                              # Master database documentation (this file)
 ```
 
 ---
@@ -419,8 +463,9 @@ DB_TIMEOUT_SECONDS=30
 
 1. **Zero Credential Exposure:** Never commit `.env` files, plaintext passwords, private keys, or connection strings to version control.
 2. **Password Cryptography:** User passwords must always be hashed using modern algorithms (bcrypt/Argon2) with high work factors before insertion into the database.
-3. **Audit Log Privacy:** Audit records strictly capture event metadata, role modifications, and resource states while completely excluding credentials, session tokens, JWTs, and private keys.
-4. **Decoupled Architecture:** Authentication credentials remain strictly isolated in the `users` table. Employee profiles, attendance logs, leave records, payroll runs, notifications, documents, and audit logs hold operational metadata without credential columns.
-5. **Principle of Least Privilege:** Production applications should connect using an application-specific user account granted only `DML` privileges (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), rather than the `postgres` superuser.
-6. **Encrypted Transport:** Enable SSL (`DB_SSL_MODE=require` or `verify-full`) for all database connections in staging and production deployments.
-7. **SQL Injection Prevention:** All backend queries must utilize parameterized statements or prepared queries without exception.
+3. **Password Reset Token Security:** Password reset verification tokens are never stored in plaintext; only cryptographic hashes (SHA-256 / bcrypt) are persisted in PostgreSQL.
+4. **Audit Log Privacy:** Audit records strictly capture event metadata, role modifications, and resource states while completely excluding credentials, session tokens, JWTs, and private keys.
+5. **Decoupled Architecture:** Authentication credentials remain strictly isolated in the `users` table. Employee profiles, attendance logs, leave records, payroll data, notifications, and documents hold operational metadata without credential columns.
+6. **Principle of Least Privilege:** Production applications should connect using an application-specific user account granted only `DML` privileges (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), rather than the `postgres` superuser.
+7. **Encrypted Transport:** Enable SSL (`DB_SSL_MODE=require` or `verify-full`) for all database connections in staging and production deployments.
+8. **SQL Injection Prevention:** All backend queries must utilize parameterized statements or prepared queries without exception.

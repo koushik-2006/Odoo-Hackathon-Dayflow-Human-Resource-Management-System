@@ -3,13 +3,12 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Current Module: MODULE 11 — AUDIT LOGS (COMPLETED)
--- Next Module: MODULE 12 — PASSWORD RESET TOKENS
+-- Current Status: ALL MODULES (1–12) FULLY IMPLEMENTED & COMPLETE
 -- ==============================================================================
 -- Description:
 -- Master schema definition file for the Dayflow HRMS PostgreSQL database.
 -- Contains database-level configuration, extensions, active table schemas,
--- and documents the planned modular schema architecture.
+-- foreign key relationships, triggers, indexes, and security architectural constraints.
 -- ==============================================================================
 
 -- ------------------------------------------------------------------------------
@@ -33,7 +32,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ==============================================================================
--- ACTIVE TABLES (IMPLEMENTED)
+-- ACTIVE TABLES (MODULES 2–12)
 -- ==============================================================================
 
 -- ------------------------------------------------------------------------------
@@ -563,25 +562,59 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DE
 CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user_created ON audit_logs(user_id, created_at DESC);
 
+-- ------------------------------------------------------------------------------
+-- MODULE 12: password_reset_tokens
+-- Purpose: Secure self-service account recovery token management and verification.
+-- Relationships:
+--   - users (N : 1): password_reset_tokens.user_id -> users.id (NOT NULL, CASCADE)
+-- Architecture Note:
+--   - Stores cryptographic token hashes (SHA-256 / bcrypt) only.
+--   - Raw tokens are transmitted to the user's email and NEVER persisted in PostgreSQL.
+--   - Active tokens satisfy: used_at IS NULL AND revoked_at IS NULL AND expires_at > CURRENT_TIMESTAMP.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    token_hash VARCHAR(255) NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    used_at TIMESTAMPTZ NULL,
+    revoked_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_password_reset_tokens_user FOREIGN KEY (user_id)
+        REFERENCES users (id)
+        ON DELETE CASCADE,
+    CONSTRAINT chk_password_reset_tokens_hash CHECK (
+        LENGTH(TRIM(token_hash)) > 0
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token_hash ON password_reset_tokens(token_hash);
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expires_at ON password_reset_tokens(expires_at);
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_active ON password_reset_tokens(user_id, expires_at);
+
+DROP TRIGGER IF EXISTS trg_password_reset_tokens_updated_at ON password_reset_tokens;
+CREATE TRIGGER trg_password_reset_tokens_updated_at
+BEFORE UPDATE ON password_reset_tokens
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
 -- ==============================================================================
--- PLANNED DATABASE MODULES SPECIFICATION
+-- DATABASE IMPLEMENTATION STATUS SUMMARY
 -- ==============================================================================
 --
--- 1. MODULE: users [STATUS: IMPLEMENTED in Module 2]
--- 2. MODULE: departments [STATUS: IMPLEMENTED in Module 3]
--- 3. MODULE: employees [STATUS: IMPLEMENTED in Module 4]
--- 4. MODULE: attendance [STATUS: IMPLEMENTED in Module 5]
--- 5. MODULE: leave_types [STATUS: IMPLEMENTED in Module 6]
--- 6. MODULE: leave_requests [STATUS: IMPLEMENTED in Module 7]
--- 7. MODULE: payroll [STATUS: IMPLEMENTED in Module 8]
--- 8. MODULE: notifications [STATUS: IMPLEMENTED in Module 9]
--- 9. MODULE: documents [STATUS: IMPLEMENTED in Module 10]
--- 10. MODULE: audit_logs [STATUS: IMPLEMENTED in Module 11]
---
--- 11. MODULE: password_reset_tokens [STATUS: NEXT - Module 12]
---     Purpose: Secure self-service account recovery.
---     Scope:
---       - Secure, hashed one-time verification tokens.
---       - Expiration timestamps (time-to-live restrictions).
---       - Consumption status (USED, EXPIRED, REVOKED) and request origin metadata.
+-- 1.  MODULE 1:  Database Foundation        [STATUS: COMPLETE]
+-- 2.  MODULE 2:  users                      [STATUS: COMPLETE]
+-- 3.  MODULE 3:  departments                [STATUS: COMPLETE]
+-- 4.  MODULE 4:  employees                  [STATUS: COMPLETE]
+-- 5.  MODULE 5:  attendance                 [STATUS: COMPLETE]
+-- 6.  MODULE 6:  leave_types                [STATUS: COMPLETE]
+-- 7.  MODULE 7:  leave_requests             [STATUS: COMPLETE]
+-- 8.  MODULE 8:  payroll                    [STATUS: COMPLETE]
+-- 9.  MODULE 9:  notifications              [STATUS: COMPLETE]
+-- 10. MODULE 10: documents                  [STATUS: COMPLETE]
+-- 11. MODULE 11: audit_logs                 [STATUS: COMPLETE]
+-- 12. MODULE 12: password_reset_tokens      [STATUS: COMPLETE]
 -- ==============================================================================

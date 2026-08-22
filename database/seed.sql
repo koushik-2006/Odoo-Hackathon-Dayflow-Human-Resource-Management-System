@@ -3,11 +3,11 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Current Module: MODULE 11 — AUDIT LOGS
+-- Current Status: ALL MODULE SEEDS (MODULES 2–12) ACTIVE
 -- ==============================================================================
 -- Description:
 -- Master seed file for the Dayflow HRMS PostgreSQL database.
--- Executes seed datasets in strict dependency order across implemented modules.
+-- Executes seed datasets in strict dependency order across all implemented modules.
 -- ==============================================================================
 
 -- ------------------------------------------------------------------------------
@@ -42,3 +42,6 @@
 
 -- 10. Immutable system activity and security audit trail (Module 11)
 \ir seeds/audit_logs.sql
+
+-- 11. Hashed self-service account recovery tokens (Module 12)
+\ir seeds/password_reset_tokens.sql
