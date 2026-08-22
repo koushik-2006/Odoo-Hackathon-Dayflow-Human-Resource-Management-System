@@ -134,6 +134,17 @@
   color: var(--text-secondary);
 }
 
+.status-late {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--accent-red);
+}
+
+.status-halfday {
+  background-color: rgba(139, 92, 246, 0.15);
+  color: var(--accent-purple);
+}
+
+
 /* Profile Detail Layout */
 .back-btn-container {
   margin-bottom: 1.5rem;
