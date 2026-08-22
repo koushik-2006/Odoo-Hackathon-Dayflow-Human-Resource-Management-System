@@ -3,6 +3,7 @@ import { Link, useNavigate, Outlet } from 'react-router-dom';
 import { Sparkles, ShieldCheck, Clock, Award, ArrowLeft } from 'lucide-react';
 import SpecularButton from '../components/ui/SpecularButton';
 import WarpText from '../components/ui/WarpText';
+import BorderGlow from '../components/ui/BorderGlow';
 
 export default function AuthLayout() {
   const navigate = useNavigate();
@@ -100,23 +101,52 @@ export default function AuthLayout() {
             Empower employees and administrative leaders with real-time tracking, seamless profile updates, automated payroll processing, and instant requests.
           </p>
 
-          {/* Feature Highlights */}
+          {/* Feature Highlights wrapped in BorderGlow */}
           <div className="grid grid-cols-3 gap-4 pt-2">
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <ShieldCheck className="w-6 h-6 text-indigo-400" />
-              <p className="text-xs font-bold text-slate-200">Role Security</p>
-              <p className="text-[11px] text-slate-400">JWT Role Guards</p>
-            </div>
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <Clock className="w-6 h-6 text-purple-400" />
-              <p className="text-xs font-bold text-slate-200">Attendance</p>
-              <p className="text-[11px] text-slate-400">Real-time Clocking</p>
-            </div>
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <Award className="w-6 h-6 text-emerald-400" />
-              <p className="text-xs font-bold text-slate-200">Automated</p>
-              <p className="text-[11px] text-slate-400">Instant Payslips</p>
-            </div>
+            <BorderGlow
+              borderRadius={18}
+              backgroundColor="rgba(15, 23, 42, 0.85)"
+              glowColor="250 80 80"
+              colors={['#818cf8', '#6366f1', '#a855f7']}
+              glowRadius={25}
+              edgeSensitivity={20}
+            >
+              <div className="p-4 space-y-2">
+                <ShieldCheck className="w-6 h-6 text-indigo-400" />
+                <p className="text-xs font-bold text-slate-200">Role Security</p>
+                <p className="text-[11px] text-slate-400">JWT Role Guards</p>
+              </div>
+            </BorderGlow>
+
+            <BorderGlow
+              borderRadius={18}
+              backgroundColor="rgba(15, 23, 42, 0.85)"
+              glowColor="280 80 80"
+              colors={['#c084fc', '#f472b6', '#818cf8']}
+              glowRadius={25}
+              edgeSensitivity={20}
+            >
+              <div className="p-4 space-y-2">
+                <Clock className="w-6 h-6 text-purple-400" />
+                <p className="text-xs font-bold text-slate-200">Attendance</p>
+                <p className="text-[11px] text-slate-400">Real-time Clocking</p>
+              </div>
+            </BorderGlow>
+
+            <BorderGlow
+              borderRadius={18}
+              backgroundColor="rgba(15, 23, 42, 0.85)"
+              glowColor="160 80 80"
+              colors={['#34d399', '#10b981', '#38bdf8']}
+              glowRadius={25}
+              edgeSensitivity={20}
+            >
+              <div className="p-4 space-y-2">
+                <Award className="w-6 h-6 text-emerald-400" />
+                <p className="text-xs font-bold text-slate-200">Automated</p>
+                <p className="text-[11px] text-slate-400">Instant Payslips</p>
+              </div>
+            </BorderGlow>
           </div>
         </div>
 

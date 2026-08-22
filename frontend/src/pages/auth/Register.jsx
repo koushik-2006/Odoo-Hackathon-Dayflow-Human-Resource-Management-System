@@ -4,8 +4,8 @@ import { Mail, Lock, UserCheck, IdCard, UserPlus, ShieldAlert } from 'lucide-rea
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import Input from '../../components/ui/Input';
-import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import SpecularButton from '../../components/ui/SpecularButton';
+import BorderGlow from '../../components/ui/BorderGlow';
 
 export default function Register() {
   const { register } = useAuth();
@@ -79,17 +79,25 @@ export default function Register() {
   };
 
   return (
-    <Card glass className="w-full shadow-2xl border-indigo-500/20 animate-fade-in">
-      <CardHeader className="text-center pb-2">
-        <CardTitle className="text-2xl font-black tracking-tight">
-          Create Account
-        </CardTitle>
-        <CardDescription>
-          Register your employee or administrator profile
-        </CardDescription>
-      </CardHeader>
+    <BorderGlow
+      borderRadius={28}
+      backgroundColor="rgba(15, 23, 42, 0.95)"
+      glowColor="270 85 80"
+      colors={['#c084fc', '#818cf8', '#f472b6']}
+      glowRadius={45}
+      edgeSensitivity={25}
+      className="w-full shadow-2xl animate-fade-in"
+    >
+      <div className="p-6 sm:p-8 space-y-6">
+        <div className="text-center space-y-1">
+          <h2 className="text-2xl font-extrabold text-white tracking-tight">
+            Create Account
+          </h2>
+          <p className="text-xs text-slate-400">
+            Register your employee or administrator profile
+          </p>
+        </div>
 
-      <CardContent className="space-y-6">
         {apiError && (
           <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-medium flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 shrink-0 text-rose-400" />
@@ -153,7 +161,7 @@ export default function Register() {
           <Input
             label="Confirm Password"
             type="password"
-            name="confirmPassword"
+            name="password"
             placeholder="••••••••"
             value={formData.confirmPassword}
             onChange={handleChange}
@@ -188,7 +196,7 @@ export default function Register() {
             Sign In here
           </Link>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </BorderGlow>
   );
 }

@@ -4,8 +4,8 @@ import { Mail, Lock, LogIn, ShieldAlert, Sparkles, UserCheck, ShieldCheck, UserC
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import Input from '../../components/ui/Input';
-import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import SpecularButton from '../../components/ui/SpecularButton';
+import BorderGlow from '../../components/ui/BorderGlow';
 
 export default function Login() {
   const { login } = useAuth();
@@ -90,58 +90,63 @@ export default function Login() {
   };
 
   return (
-    <Card glass className="w-full shadow-2xl border-indigo-500/20 animate-fade-in">
-      <CardHeader className="text-center pb-2">
-        <CardTitle className="text-2xl font-black tracking-tight">
-          Sign In to Dayflow
-        </CardTitle>
-        <CardDescription>
-          Enter your credentials to access your workplace portal
-        </CardDescription>
-      </CardHeader>
+    <BorderGlow
+      borderRadius={28}
+      backgroundColor="rgba(15, 23, 42, 0.95)"
+      glowColor="250 85 80"
+      colors={['#818cf8', '#c084fc', '#38bdf8']}
+      glowRadius={45}
+      edgeSensitivity={25}
+      className="w-full shadow-2xl animate-fade-in"
+    >
+      <div className="p-6 sm:p-8 space-y-6">
+        <div className="text-center space-y-1">
+          <h2 className="text-2xl font-extrabold text-white tracking-tight">
+            Sign In to Dayflow
+          </h2>
+          <p className="text-xs text-slate-400">
+            Enter your credentials to access your workplace portal
+          </p>
+        </div>
 
-      <CardContent className="space-y-6">
         {/* Quick Demo Selector */}
-        <div className="p-3.5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 text-center space-y-2.5">
+        <div className="p-3.5 bg-indigo-950/60 rounded-2xl border border-indigo-500/30 text-center space-y-2.5">
           <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-300 flex items-center justify-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" /> Instant Test Login Presets
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Instant Test Login Presets
           </p>
           <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
+            <SpecularButton
+              size="sm"
+              radius={10}
+              baseColor={formData.role === 'employee' ? '#4f46e5' : '#1e293b'}
+              lineColor={formData.role === 'employee' ? '#a5b4fc' : '#64748b'}
+              textColor="#ffffff"
               onClick={() => handleQuickDemo('employee')}
-              className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold transition-all border flex items-center justify-center gap-1 ${
-                formData.role === 'employee'
-                  ? 'bg-indigo-600 text-white border-indigo-400'
-                  : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
-              }`}
             >
-              <UserCheck className="w-3 h-3" /> Employee
-            </button>
+              <UserCheck className="w-3 h-3 mr-1" /> Employee
+            </SpecularButton>
 
-            <button
-              type="button"
+            <SpecularButton
+              size="sm"
+              radius={10}
+              baseColor={formData.role === 'hr' ? '#0d9488' : '#1e293b'}
+              lineColor={formData.role === 'hr' ? '#5eead4' : '#64748b'}
+              textColor="#ffffff"
               onClick={() => handleQuickDemo('hr')}
-              className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold transition-all border flex items-center justify-center gap-1 ${
-                formData.role === 'hr'
-                  ? 'bg-teal-600 text-white border-teal-400'
-                  : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
-              }`}
             >
-              <UserCog className="w-3 h-3" /> HR Manager
-            </button>
+              <UserCog className="w-3 h-3 mr-1" /> HR Manager
+            </SpecularButton>
 
-            <button
-              type="button"
+            <SpecularButton
+              size="sm"
+              radius={10}
+              baseColor={formData.role === 'admin' ? '#7c3aed' : '#1e293b'}
+              lineColor={formData.role === 'admin' ? '#c084fc' : '#64748b'}
+              textColor="#ffffff"
               onClick={() => handleQuickDemo('admin')}
-              className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold transition-all border flex items-center justify-center gap-1 ${
-                formData.role === 'admin'
-                  ? 'bg-purple-600 text-white border-purple-400'
-                  : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
-              }`}
             >
-              <ShieldCheck className="w-3 h-3" /> Admin
-            </button>
+              <ShieldCheck className="w-3 h-3 mr-1" /> Admin
+            </SpecularButton>
           </div>
         </div>
 
@@ -219,7 +224,7 @@ export default function Login() {
             Register Employee
           </Link>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </BorderGlow>
   );
 }
