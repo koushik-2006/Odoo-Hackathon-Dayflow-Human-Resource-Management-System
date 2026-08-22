@@ -3,7 +3,7 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Current Module: MODULE 10 — DOCUMENTS
+-- Current Module: MODULE 11 — AUDIT LOGS
 -- ==============================================================================
 -- Description:
 -- Master seed file for the Dayflow HRMS PostgreSQL database.
@@ -39,3 +39,6 @@
 
 -- 9. Employee document metadata and verification records (Module 10)
 \ir seeds/documents.sql
+
+-- 10. Immutable system activity and security audit trail (Module 11)
+\ir seeds/audit_logs.sql

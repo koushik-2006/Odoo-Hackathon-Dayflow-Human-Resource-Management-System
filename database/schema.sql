@@ -3,8 +3,8 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Current Module: MODULE 10 — DOCUMENTS (COMPLETED)
--- Next Module: MODULE 11 — AUDIT LOGS
+-- Current Module: MODULE 11 — AUDIT LOGS (COMPLETED)
+-- Next Module: MODULE 12 — PASSWORD RESET TOKENS
 -- ==============================================================================
 -- Description:
 -- Master schema definition file for the Dayflow HRMS PostgreSQL database.
@@ -520,6 +520,49 @@ BEFORE UPDATE ON documents
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
+-- ------------------------------------------------------------------------------
+-- MODULE 11: audit_logs
+-- Purpose: Immutable activity and security audit trail across all Dayflow entities.
+-- Relationships:
+--   - users (N : 1): audit_logs.user_id -> users.id (NULLABLE, SET NULL)
+-- Characteristics:
+--   - Append-only immutable ledger. No update or delete triggers.
+--   - Captures actor, action, target resource, JSONB old/new values, IP, and user-agent.
+--   - Security: Strictly excludes passwords, hashes, tokens, API keys, or credentials.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NULL,
+    action VARCHAR(100) NOT NULL,
+    entity_type VARCHAR(100) NULL,
+    entity_id UUID NULL,
+    description TEXT NULL,
+    old_values JSONB NULL,
+    new_values JSONB NULL,
+    ip_address INET NULL,
+    user_agent TEXT NULL,
+    request_id VARCHAR(100) NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_audit_logs_user FOREIGN KEY (user_id)
+        REFERENCES users (id)
+        ON DELETE SET NULL,
+    CONSTRAINT chk_audit_logs_action CHECK (
+        LENGTH(TRIM(action)) > 0
+    ),
+    CONSTRAINT chk_audit_logs_entity_type CHECK (
+        entity_type IS NULL OR LENGTH(TRIM(entity_type)) > 0
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_type ON audit_logs(entity_type);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_id ON audit_logs(entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_created ON audit_logs(user_id, created_at DESC);
+
 -- ==============================================================================
 -- PLANNED DATABASE MODULES SPECIFICATION
 -- ==============================================================================
@@ -533,17 +576,9 @@ EXECUTE FUNCTION update_updated_at_column();
 -- 7. MODULE: payroll [STATUS: IMPLEMENTED in Module 8]
 -- 8. MODULE: notifications [STATUS: IMPLEMENTED in Module 9]
 -- 9. MODULE: documents [STATUS: IMPLEMENTED in Module 10]
+-- 10. MODULE: audit_logs [STATUS: IMPLEMENTED in Module 11]
 --
--- 10. MODULE: audit_logs [STATUS: NEXT - Module 11]
---     Purpose: Comprehensive compliance, security, and activity tracking.
---     Scope:
---       - Actor tracking (user ID, session ID, client IP address, user agent).
---       - Action descriptors (CREATE, UPDATE, DELETE, LOGIN, EXPORT, PERMISSION_CHANGE).
---       - Target resource name and entity identifier.
---       - Structured JSON change payloads (before/after snapshots).
---       - Immutable, append-only records with microsecond timestamps.
---
--- 11. MODULE: password_reset_tokens [STATUS: PLANNED - Module 12]
+-- 11. MODULE: password_reset_tokens [STATUS: NEXT - Module 12]
 --     Purpose: Secure self-service account recovery.
 --     Scope:
 --       - Secure, hashed one-time verification tokens.

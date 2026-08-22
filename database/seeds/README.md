@@ -25,9 +25,10 @@ Because relational integrity is enforced by foreign keys, seed files MUST be exe
 | **7** | `payroll.sql` | Salary structure records, monthly pay runs, allowances, deductions, and payment records | **Module 8 (ACTIVE)** | **Depends on `employees` (N:1)** |
 | **8** | `notifications.sql` | Sample in-app alerts, broadcast notifications, and unread indicators | **Module 9 (ACTIVE)** | **Depends on `users` (N:1); references M5, M7, M8** |
 | **9** | `documents.sql` | Centralized employee HR files, identity proofs, contracts, and company policies | **Module 10 (ACTIVE)** | **Depends on `employees` (N:1) & `users` (N:1)** |
-| **10**| `audit_logs.sql` | Sample compliance and audit trail records | *Module 11 (Planned)* | **Depends on `users`** |
+| **10**| `audit_logs.sql` | Immutable security, authentication, and HR operational audit trail records | **Module 11 (ACTIVE)** | **Depends on `users` (N:1); references M4-M10** |
+| **11**| `password_reset.sql`| Sample account recovery tokens and request metadata | *Module 12 (Planned)* | **Depends on `users`** |
 
-> ⚠️ **Dependency Rule:** `documents.sql` references `employees(id)` as the document owner and `users(id)` as the uploader and reviewer. It must be executed after `employees.sql` and `users.sql`.
+> ⚠️ **Dependency Rule:** `audit_logs.sql` references `users(id)` as the actor and holds entity identifiers across employee profiles, attendance logs, leave records, payroll runs, and documents. It must be executed after all referenced modules.
 
 ---
 
@@ -35,5 +36,6 @@ Because relational integrity is enforced by foreign keys, seed files MUST be exe
 
 1. **Pre-Hashed Passwords Only:** All user passwords in seed scripts MUST be securely hashed (e.g., using bcrypt with high work factor). Never store or seed plain-text passwords.
 2. **Synthetic Data (No PII):** All names, email addresses, phone numbers, and financial details must be completely synthetic. Never use real personal identifiable information.
-3. **Deterministic UUIDs / IDs:** Where relationships exist between tables, use deterministic primary and foreign keys so seeding produces repeatable, consistent results.
-4. **Environment Isolation:** Seed files containing mock demo records must NEVER be executed against production environments.
+3. **Zero Credential / Token Logging:** Audit log seeds MUST NOT store passwords, password hashes, JWTs, access/refresh tokens, API keys, or private secrets in JSONB payloads.
+4. **Deterministic UUIDs / IDs:** Where relationships exist between tables, use deterministic primary and foreign keys so seeding produces repeatable, consistent results.
+5. **Environment Isolation:** Seed files containing mock demo records must NEVER be executed against production environments.
