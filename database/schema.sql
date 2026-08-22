@@ -3,8 +3,8 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Completed Modules: MODULE 1 (Foundation), MODULE 2 (Users), MODULE 3 (Departments)
--- Next Module: MODULE 4 (Employees)
+-- Current Module: MODULE 4 — EMPLOYEES (COMPLETED)
+-- Next Module: MODULE 5 — ATTENDANCE
 -- ==============================================================================
 -- Description:
 -- Master schema definition file for the Dayflow HRMS PostgreSQL database.
@@ -39,8 +39,7 @@ $$ LANGUAGE plpgsql;
 -- ------------------------------------------------------------------------------
 -- MODULE 2: users
 -- Purpose: Authentication, credentials, role (ADMIN, HR, EMPLOYEE), and account state.
--- Architecture Note: Decoupled from personal profiles (1:1 with Module 4 employees table).
--- No employee_id or employee_code is stored in the users table.
+-- Architecture Note: Decoupled from personal profiles (1:1 with employees table).
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -103,26 +102,80 @@ BEFORE UPDATE ON departments
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
+-- ------------------------------------------------------------------------------
+-- MODULE 4: employees
+-- Purpose: Employee personal profiles, HR lifecycle, job details, and linkages.
+-- Relationships:
+--   - users (1 : 1): employees.user_id -> users.id (UNIQUE NOT NULL)
+--   - departments (N : 1): employees.department_id -> departments.id (NULLABLE)
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS employees (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    employee_code VARCHAR(50) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    date_of_birth DATE NULL,
+    gender VARCHAR(30) NULL,
+    phone VARCHAR(20) NULL,
+    address TEXT NULL,
+    city VARCHAR(100) NULL,
+    state VARCHAR(100) NULL,
+    postal_code VARCHAR(20) NULL,
+    job_title VARCHAR(100) NOT NULL,
+    department_id UUID NULL,
+    joining_date DATE NOT NULL,
+    employment_status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+    profile_picture_url TEXT NULL,
+    emergency_contact_name VARCHAR(150) NULL,
+    emergency_contact_phone VARCHAR(20) NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_employees_user_id UNIQUE (user_id),
+    CONSTRAINT uq_employees_employee_code UNIQUE (employee_code),
+    CONSTRAINT fk_employees_user FOREIGN KEY (user_id)
+        REFERENCES users (id)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_employees_department FOREIGN KEY (department_id)
+        REFERENCES departments (id)
+        ON DELETE RESTRICT,
+    CONSTRAINT chk_employees_employment_status CHECK (
+        employment_status IN ('ACTIVE', 'INACTIVE', 'ON_NOTICE', 'TERMINATED')
+    ),
+    CONSTRAINT chk_employees_gender CHECK (
+        gender IS NULL OR gender IN ('MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY')
+    ),
+    CONSTRAINT chk_employees_dob CHECK (
+        date_of_birth IS NULL OR date_of_birth <= CURRENT_DATE
+    ),
+    CONSTRAINT chk_employees_names_not_empty CHECK (
+        LENGTH(TRIM(first_name)) > 0 AND LENGTH(TRIM(last_name)) > 0
+    ),
+    CONSTRAINT chk_employees_code_format CHECK (
+        LENGTH(TRIM(employee_code)) >= 2 AND employee_code ~ '^[A-Za-z0-9_-]+$'
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_employees_department_id ON employees(department_id);
+CREATE INDEX IF NOT EXISTS idx_employees_employment_status ON employees(employment_status);
+CREATE INDEX IF NOT EXISTS idx_employees_joining_date ON employees(joining_date DESC);
+
+DROP TRIGGER IF EXISTS trg_employees_updated_at ON employees;
+CREATE TRIGGER trg_employees_updated_at
+BEFORE UPDATE ON employees
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
 -- ==============================================================================
 -- PLANNED DATABASE MODULES SPECIFICATION
 -- ==============================================================================
 --
 -- 1. MODULE: users [STATUS: IMPLEMENTED in Module 2]
 -- 2. MODULE: departments [STATUS: IMPLEMENTED in Module 3]
+-- 3. MODULE: employees [STATUS: IMPLEMENTED in Module 4]
 --
--- 3. MODULE: employees [STATUS: NEXT - Module 4]
---    Purpose: Comprehensive employee profiles and employment lifecycle.
---    Expected Architecture:
---      - id UUID PRIMARY KEY DEFAULT gen_random_uuid()
---      - user_id UUID UNIQUE NOT NULL -> REFERENCES users(id) [1:1 relationship]
---      - employee_code VARCHAR(...) UNIQUE NOT NULL
---      - department_id UUID NULL -> REFERENCES departments(id)
---      - first_name, last_name, date_of_birth, contact details, designation,
---        employment_type (FULL_TIME, PART_TIME, CONTRACTOR), join_date, exit_date
---      - address and emergency contact records
---    [NOTE: NOT implemented yet; will be created in Module 4]
---
--- 4. MODULE: attendance [STATUS: PLANNED - Module 5]
+-- 4. MODULE: attendance [STATUS: NEXT - Module 5]
 --    Purpose: Daily time tracking, shift management, and punctuality logging.
 --    Scope:
 --      - Daily attendance records linked to employees.
