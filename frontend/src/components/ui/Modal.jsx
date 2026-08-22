@@ -7,6 +7,7 @@ export default function Modal({
   title,
   subtitle,
   children,
+  footer,
   maxWidth = 'max-w-lg',
 }) {
   useEffect(() => {
@@ -28,27 +29,27 @@ export default function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      {/* Backdrop Overlay */}
+    <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+      {/* Dark Blur Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity animate-fade-in"
+        className="fixed inset-0 bg-slate-950/85 backdrop-blur-md transition-opacity animate-fade-in"
         onClick={onClose}
       />
 
-      {/* Dialog container */}
+      {/* Centered Modal Window Dialog */}
       <div
-        className={`relative w-full ${maxWidth} max-h-[90vh] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-10 flex flex-col transition-all transform animate-fade-in my-auto`}
+        className={`relative w-full ${maxWidth} max-h-[85vh] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-10 flex flex-col overflow-hidden transition-all transform animate-fade-in my-auto`}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-slate-800/80 shrink-0">
+        {/* Modal Header */}
+        <div className="flex items-start justify-between p-5 border-b border-slate-800/80 shrink-0 bg-slate-900/90">
           <div>
             {title && (
-              <h3 className="text-xl font-bold text-slate-100 tracking-tight">
+              <h3 className="text-lg font-bold text-slate-100 tracking-tight">
                 {title}
               </h3>
             )}
             {subtitle && (
-              <p className="text-xs text-slate-400 mt-1">{subtitle}</p>
+              <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>
             )}
           </div>
           <button
@@ -59,10 +60,17 @@ export default function Modal({
           </button>
         </div>
 
-        {/* Content Body with smooth vertical scrolling */}
-        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+        {/* Modal Body (Scrollable fields area) */}
+        <div className="p-5 sm:p-6 overflow-y-auto flex-1 min-h-0 custom-scrollbar space-y-4">
           {children}
         </div>
+
+        {/* Modal Sticky Footer (Always visible Save & Cancel buttons) */}
+        {footer && (
+          <div className="p-4 sm:p-5 border-t border-slate-800/80 bg-slate-950/80 shrink-0 flex items-center justify-end gap-3">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

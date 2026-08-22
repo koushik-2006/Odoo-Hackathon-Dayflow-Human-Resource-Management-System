@@ -19,9 +19,9 @@ export default function EmployeeLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+    <div className="h-screen w-screen bg-slate-950 text-slate-100 flex overflow-hidden selection:bg-indigo-500 selection:text-white">
       {/* Sidebar for Desktop */}
-      <div className="hidden md:block shrink-0">
+      <div className="hidden md:block shrink-0 h-full">
         <Sidebar
           role={ROLES.EMPLOYEE}
           isCollapsed={isCollapsed}
@@ -36,7 +36,7 @@ export default function EmployeeLayout() {
             className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
             onClick={() => setIsMobileOpen(false)}
           />
-          <div className="relative z-10 w-64">
+          <div className="relative z-10 w-64 h-full">
             <Sidebar
               role={ROLES.EMPLOYEE}
               isCollapsed={false}
@@ -48,7 +48,7 @@ export default function EmployeeLayout() {
 
       {/* Main Content Workspace */}
       <div
-        className={`flex-1 flex flex-col min-w-0 min-h-screen transition-all duration-300 ${
+        className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden transition-all duration-300 ${
           isCollapsed ? 'md:ml-20' : 'md:ml-64'
         }`}
       >
@@ -57,7 +57,7 @@ export default function EmployeeLayout() {
           pageTitle={getPageTitle(location.pathname)}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto animate-fade-in overflow-y-auto">
+        <main className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto animate-fade-in custom-scrollbar">
           <Outlet />
         </main>
       </div>

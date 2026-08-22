@@ -17,7 +17,6 @@ import {
   Camera,
   Layers,
   Upload,
-  Image as ImageIcon,
 } from 'lucide-react';
 import employeeService from '../../services/employeeService';
 import { useAuth } from '../../context/AuthContext';
@@ -347,15 +346,35 @@ export default function Profile() {
         </CardContent>
       </Card>
 
-      {/* 5. Edit Profile Modal (Employee can edit: Phone, Address, Profile Picture) */}
+      {/* 5. Centered Edit Profile Modal with Sticky Footer */}
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         title="Edit Personal Profile"
         subtitle="Update your phone number, residential address, or avatar picture"
         maxWidth="max-w-lg"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setIsEditModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="edit-profile-form"
+              variant="primary"
+              isLoading={isSaving}
+              icon={Check}
+            >
+              Save Profile Changes
+            </Button>
+          </>
+        }
       >
-        <form onSubmit={handleSaveProfile} className="space-y-4">
+        <form id="edit-profile-form" onSubmit={handleSaveProfile} className="space-y-4">
           {/* Editable: Phone */}
           <Input
             label="Phone Number"
@@ -423,29 +442,10 @@ export default function Profile() {
               />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-slate-200">Avatar Image Preview</p>
-                <p className="text-[10px] text-slate-400 truncate">Ready to be sent to PUT /api/employees/me</p>
+                <p className="text-[10px] text-slate-400 truncate">Ready to submit via PUT /api/employees/me</p>
               </div>
             </div>
           )}
-
-          {/* Form Submit Buttons */}
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-800/80">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setIsEditModalOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              isLoading={isSaving}
-              icon={Check}
-            >
-              Save Changes to Profile
-            </Button>
-          </div>
         </form>
       </Modal>
     </div>
