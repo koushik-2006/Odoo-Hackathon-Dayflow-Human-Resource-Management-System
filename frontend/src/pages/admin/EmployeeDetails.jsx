@@ -1,86 +1,324 @@
-import React from 'react';
-import { useParams, NavLink } from 'react-router-dom';
-import { ArrowLeft, User, Mail, Phone, MapPin, Building, Calendar, DollarSign, ShieldCheck } from 'lucide-react';
-import Card, { CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
-import Badge from '../../components/ui/Badge';
-import Button from '../../components/ui/Button';
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Edit2, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { adminApi } from '../../services/adminApi';
+import EmployeeEditModal from '../../components/admin/EmployeeEditModal';
 
 export default function EmployeeDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
-  const mockDetails = {
-    id: id || 'EMP-2045',
-    name: 'Alex Mercer',
-    email: 'alex.mercer@dayflow.com',
-    phone: '+1 (555) 234-5678',
-    address: '742 Evergreen Terrace, Springfield, OR',
-    dob: '1994-06-15',
-    department: 'Engineering',
-    designation: 'Senior Frontend Engineer',
-    joiningDate: '2022-03-01',
-    employmentType: 'Full-Time Permanent',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300',
-    basicSalary: 6500,
-    hra: 1800,
-    allowances: 700,
-    netSalary: 9000,
+  const [employee, setEmployee] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Tab states: 'overview' | 'attendance' | 'leave' | 'payroll'
+  const [activeTab, setActiveTab] = useState('overview');
+
+  // Modal states
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  // Tab dynamic data states
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [payrollRecord, setPayrollRecord] = useState(null);
+
+  useEffect(() => {
+    async function loadEmployeeDetails() {
+      try {
+        setLoading(true);
+        const empData = await adminApi.getEmployee(id);
+        setEmployee(empData);
+
+        // Fetch child tab items in parallel
+        const [attData, payrollData] = await Promise.all([
+          adminApi.getEmployeeAttendance(id),
+          adminApi.getPayroll()
+        ]);
+
+        setAttendanceRecords(attData);
+        const salaryInfo = payrollData.find(p => p.employeeId === id);
+        setPayrollRecord(salaryInfo || null);
+
+      } catch (err) {
+        setError('Employee record not found or server issue occurred.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadEmployeeDetails();
+  }, [id]);
+
+  const handleUpdateSave = async (updatedFields) => {
+    try {
+      setIsEditModalOpen(false);
+      setLoading(true);
+      const updatedEmp = await adminApi.updateEmployee(id, updatedFields);
+      setEmployee(updatedEmp);
+
+      // Trigger toast notice
+      setToastMessage('✓ Employee details updated successfully');
+      setTimeout(() => setToastMessage(null), 3000);
+    } catch (err) {
+      alert('Failed to update employee details.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
-      <NavLink
-        to="/admin/employees"
-        className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" /> Back to Employee Directory
-      </NavLink>
+  if (loading && !employee) {
+    return (
+      <div className="admin-loading-container">
+        <Loader2 className="animate-spin" size={48} />
+        <p>Loading profile information...</p>
+      </div>
+    );
+  }
 
-      <Card glass className="p-6">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          <img
-            src={mockDetails.avatar}
-            alt={mockDetails.name}
-            className="w-24 h-24 rounded-2xl object-cover border-2 border-indigo-500/40"
-          />
-          <div className="flex-1 text-center sm:text-left space-y-1">
-            <div className="flex items-center justify-center sm:justify-start gap-3">
-              <h2 className="text-2xl font-black text-slate-100">{mockDetails.name}</h2>
-              <Badge variant="indigo" size="sm" dot>Active</Badge>
+  if (error) {
+    return (
+      <div className="admin-error-container">
+        <AlertCircle size={48} className="text-red" />
+        <p>{error}</p>
+        <button onClick={() => navigate('/admin/employees')} className="retry-btn">
+          Back to Directory
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="employee-details-page fade-in">
+      {/* Toast popup */}
+      {toastMessage && (
+        <div className="toast-success">
+          <CheckCircle size={18} />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Back navigations */}
+      <div className="back-btn-container">
+        <button onClick={() => navigate('/admin/employees')} className="back-link" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+          <ArrowLeft size={16} />
+          <span>Back to Employees</span>
+        </button>
+      </div>
+
+      {/* Header Profile Info card */}
+      <div className="profile-card-header">
+        <div className="profile-header-info">
+          <div className="big-avatar">
+            {employee.name.split(' ').map(n => n[0]).join('')}
+          </div>
+          <div className="header-text">
+            <h2>{employee.name}</h2>
+            <div className="header-meta">
+              <span>{employee.id}</span>
+              <span style={{ margin: '0 0.5rem' }}>•</span>
+              <span>{employee.department} • {employee.designation}</span>
             </div>
-            <p className="text-sm text-indigo-300 font-medium">
-              {mockDetails.designation} &bull; {mockDetails.department}
-            </p>
-            <p className="text-xs font-mono text-slate-400">ID: {mockDetails.id}</p>
           </div>
         </div>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card glass>
-          <CardHeader>
-            <CardTitle>Personal Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-xs text-slate-300">
-            <p><strong>Email:</strong> {mockDetails.email}</p>
-            <p><strong>Phone:</strong> {mockDetails.phone}</p>
-            <p><strong>Address:</strong> {mockDetails.address}</p>
-            <p><strong>Date of Birth:</strong> {formatDate(mockDetails.dob)}</p>
-          </CardContent>
-        </Card>
-
-        <Card glass>
-          <CardHeader>
-            <CardTitle>Compensation</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-xs text-slate-300">
-            <p><strong>Basic Salary:</strong> {formatCurrency(mockDetails.basicSalary)}</p>
-            <p><strong>HRA:</strong> {formatCurrency(mockDetails.hra)}</p>
-            <p><strong>Allowances:</strong> {formatCurrency(mockDetails.allowances)}</p>
-            <p className="text-sm font-bold text-emerald-400"><strong>Net Salary:</strong> {formatCurrency(mockDetails.netSalary)}</p>
-          </CardContent>
-        </Card>
+        <button className="action-btn-primary" onClick={() => setIsEditModalOpen(true)}>
+          <Edit2 size={16} />
+          <span>Edit Employee</span>
+        </button>
       </div>
+
+      {/* Tab navigation headers */}
+      <div className="profile-tabs-header">
+        <button
+          className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveTab('overview')}
+        >
+          Overview
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'attendance' ? 'active' : ''}`}
+          onClick={() => setActiveTab('attendance')}
+        >
+          Attendance
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'leave' ? 'active' : ''}`}
+          onClick={() => setActiveTab('leave')}
+        >
+          Leave
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'payroll' ? 'active' : ''}`}
+          onClick={() => setActiveTab('payroll')}
+        >
+          Payroll
+        </button>
+      </div>
+
+      {/* Tab bodies */}
+      <div className="tab-content-body">
+        {activeTab === 'overview' && (
+          <div className="details-grid">
+            <div className="detail-section">
+              <h3>Personal Details</h3>
+              <div className="info-rows">
+                <div className="info-row">
+                  <span className="info-label">Full Name</span>
+                  <span className="info-val">{employee.name}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Date of Birth</span>
+                  <span className="info-val">{employee.dob}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Gender</span>
+                  <span className="info-val">{employee.gender}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="detail-section">
+              <h3>Job Details</h3>
+              <div className="info-rows">
+                <div className="info-row">
+                  <span className="info-label">Department</span>
+                  <span className="info-val">{employee.department}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Designation</span>
+                  <span className="info-val">{employee.designation}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Role Category</span>
+                  <span className="info-val">{employee.role}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Joining Date</span>
+                  <span className="info-val">{employee.joiningDate}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Employment Status</span>
+                  <span className="info-val">{employee.status}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="detail-section" style={{ gridColumn: 'span 2' }}>
+              <h3>Contact Details</h3>
+              <div className="info-rows">
+                <div className="info-row">
+                  <span className="info-label">Email Address</span>
+                  <span className="info-val">{employee.email}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Phone Number</span>
+                  <span className="info-val">{employee.phone}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Residential Address</span>
+                  <span className="info-val">{employee.address}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'attendance' && (
+          <div className="detail-section">
+            <h3>Attendance Log (Summary)</h3>
+            {employee.attendance ? (
+              <div className="info-rows">
+                <div className="info-row">
+                  <span className="info-label">Present Days</span>
+                  <span className="info-val" style={{ color: 'var(--accent-green)' }}>{employee.attendance.present}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Absent Days</span>
+                  <span className="info-val" style={{ color: 'var(--accent-red)' }}>{employee.attendance.absent}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">On Leave</span>
+                  <span className="info-val" style={{ color: 'var(--accent-yellow)' }}>{employee.attendance.leave}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Half Day</span>
+                  <span className="info-val" style={{ color: 'var(--accent-purple)' }}>{employee.attendance.halfDay}</span>
+                </div>
+              </div>
+            ) : (
+              <p style={{ color: 'var(--text-secondary)' }}>No summary records available.</p>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'leave' && (
+          <div className="detail-section">
+            <h3>Leave Inbox Details</h3>
+            {employee.leave ? (
+              <div className="info-rows">
+                <div className="info-row">
+                  <span className="info-label">Approved Leaves</span>
+                  <span className="info-val" style={{ color: 'var(--accent-green)' }}>{employee.leave.approved}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Pending Approvals</span>
+                  <span className="info-val" style={{ color: 'var(--accent-yellow)' }}>{employee.leave.pending}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Rejected Requests</span>
+                  <span className="info-val" style={{ color: 'var(--accent-red)' }}>{employee.leave.rejected}</span>
+                </div>
+              </div>
+            ) : (
+              <p style={{ color: 'var(--text-secondary)' }}>No leave balance summary records available.</p>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'payroll' && (
+          <div className="detail-section">
+            <h3>Salary Info Details</h3>
+            {employee.payroll ? (
+              <div className="info-rows">
+                <div className="info-row">
+                  <span className="info-label">Basic Salary</span>
+                  <span className="info-val">₹{employee.payroll.basicSalary.toLocaleString()}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">House Rent Allowance (HRA)</span>
+                  <span className="info-val">₹{employee.payroll.hra.toLocaleString()}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Special Allowances</span>
+                  <span className="info-val">₹{employee.payroll.allowances.toLocaleString()}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">PF & Tax Deductions</span>
+                  <span className="info-val">₹{employee.payroll.deductions.toLocaleString()}</span>
+                </div>
+                <div className="info-row" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.5rem', marginTop: '0.5rem', fontWeight: 'bold' }}>
+                  <span className="info-label">Calculated Net Salary</span>
+                  <span className="info-val" style={{ color: 'var(--accent-green)' }}>
+                    ₹{employee.payroll.netSalary.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p style={{ color: 'var(--text-secondary)' }}>No payroll structure set for this employee.</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Edit Form Modal */}
+      {isEditModalOpen && (
+        <EmployeeEditModal
+          employee={employee}
+          onClose={() => setIsEditModalOpen(false)}
+          onSave={handleUpdateSave}
+        />
+      )}
     </div>
   );
 }

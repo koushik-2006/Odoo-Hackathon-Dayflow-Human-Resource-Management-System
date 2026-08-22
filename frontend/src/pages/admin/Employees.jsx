@@ -1,161 +1,200 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { Users, Search, Plus, Filter, Eye, Mail, Building, IdCard } from 'lucide-react';
-import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
-import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/Table';
-import Badge from '../../components/ui/Badge';
-import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
-
-const INITIAL_EMPLOYEES = [
-  {
-    id: 'EMP-2045',
-    name: 'Alex Mercer',
-    email: 'alex.mercer@dayflow.com',
-    department: 'Engineering',
-    designation: 'Senior Frontend Engineer',
-    role: 'employee',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-  },
-  {
-    id: 'EMP-1001',
-    name: 'Sarah Connor',
-    email: 'sarah@dayflow.com',
-    department: 'Human Resources',
-    designation: 'HR Director',
-    role: 'admin',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-  },
-  {
-    id: 'EMP-3012',
-    name: 'Jessica Vance',
-    email: 'hr@dayflow.com',
-    department: 'Human Resources',
-    designation: 'HR Manager',
-    role: 'hr',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-  },
-  {
-    id: 'EMP-4050',
-    name: 'Michael Scott',
-    email: 'michael@dayflow.com',
-    department: 'Sales',
-    designation: 'Regional Sales Manager',
-    role: 'employee',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-  },
-];
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Loader2, AlertCircle, Eye } from 'lucide-react';
+import { adminApi } from '../../services/adminApi';
 
 export default function Employees() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [deptFilter, setDeptFilter] = useState('All');
+  const navigate = useNavigate();
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filtered = INITIAL_EMPLOYEES.filter((emp) => {
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDept, setSelectedDept] = useState('All');
+  const [selectedRole, setSelectedRole] = useState('All');
+  const [selectedStatus, setSelectedStatus] = useState('All');
+
+  useEffect(() => {
+    async function fetchEmployees() {
+      try {
+        setLoading(true);
+        const data = await adminApi.getEmployees({
+          search: searchQuery,
+          department: selectedDept,
+          role: selectedRole,
+          status: selectedStatus
+        });
+        setEmployees(data);
+      } catch (err) {
+        setError('Failed to load employee list.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchEmployees();
+  }, [searchQuery, selectedDept, selectedRole, selectedStatus]);
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'Active': return 'status-badge status-active';
+      case 'On Leave': return 'status-badge status-onleave';
+      case 'Inactive': return 'status-badge status-inactive';
+      default: return 'status-badge';
+    }
+  };
+
+  // Frontend filtering logic based on multi-filter selections
+  const filteredEmployees = employees.filter((emp) => {
     const matchesSearch =
-      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDept = deptFilter === 'All' || emp.department === deptFilter;
-    return matchesSearch && matchesDept;
+      emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      emp.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      emp.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesDept = selectedDept === 'All' || emp.department === selectedDept;
+    const matchesRole = selectedRole === 'All' || emp.role === selectedRole;
+    const matchesStatus = selectedStatus === 'All' || emp.status === selectedStatus;
+
+    return matchesSearch && matchesDept && matchesRole && matchesStatus;
   });
 
+  if (loading) {
+    return (
+      <div className="admin-loading-container">
+        <Loader2 className="animate-spin" size={48} />
+        <p>Fetching employee records...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-error-container">
+        <AlertCircle size={48} className="text-red" />
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()} className="retry-btn">Retry</button>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-100 tracking-tight">Employee Directory</h1>
-          <p className="text-xs text-slate-400">View and manage all staff members across the company</p>
-        </div>
+    <div className="employees-page fade-in">
+      <div className="welcome-banner">
+        <h2>Employee Management</h2>
+        <p>Search, filter, view details, and manage designations/roles.</p>
       </div>
 
-      {/* Filter and Search Controls */}
-      <Card glass className="p-4">
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="flex-1 w-full">
-            <Input
-              placeholder="Search by name, email, or employee ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              icon={Search}
-            />
-          </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+      {/* Filter and search directory controls */}
+      <div className="directory-controls">
+        <div className="search-field">
+          <Search size={18} className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search by name, EMP ID, or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        <div className="filter-group">
+          <div className="filter-item">
+            <span className="filter-label">Department</span>
             <select
-              value={deptFilter}
-              onChange={(e) => setDeptFilter(e.target.value)}
-              className="bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-48"
+              className="filter-select"
+              value={selectedDept}
+              onChange={(e) => setSelectedDept(e.target.value)}
             >
-              <option value="All">All Departments</option>
-              <option value="Engineering">Engineering</option>
-              <option value="Human Resources">Human Resources</option>
-              <option value="Sales">Sales</option>
+              <option value="All">All</option>
+              <option value="IT">IT</option>
+              <option value="HR">HR</option>
+              <option value="Finance">Finance</option>
+              <option value="Marketing">Marketing</option>
+            </select>
+          </div>
+
+          <div className="filter-item">
+            <span className="filter-label">Role</span>
+            <select
+              className="filter-select"
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+            >
+              <option value="All">All</option>
+              <option value="Admin">Admin</option>
+              <option value="HR">HR</option>
+              <option value="Manager">Manager</option>
+              <option value="Employee">Employee</option>
+            </select>
+          </div>
+
+          <div className="filter-item">
+            <span className="filter-label">Status</span>
+            <select
+              className="filter-select"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+            >
+              <option value="All">All</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+              <option value="On Leave">On Leave</option>
             </select>
           </div>
         </div>
-      </Card>
+      </div>
 
-      {/* Employees Table */}
-      <Card glass>
-        <CardContent className="p-0 sm:p-6">
-          <Table>
-            <TableHeader>
-              <TableRow hover={false}>
-                <TableHead>Employee</TableHead>
-                <TableHead>ID</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Designation</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((emp) => (
-                <TableRow key={emp.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={emp.avatar}
-                        alt={emp.name}
-                        className="w-9 h-9 rounded-full object-cover border border-indigo-500/40"
-                      />
-                      <div>
-                        <p className="font-bold text-slate-200">{emp.name}</p>
-                        <p className="text-[11px] text-slate-400">{emp.email}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-indigo-400 font-bold">{emp.id}</TableCell>
-                  <TableCell>{emp.department}</TableCell>
-                  <TableCell className="text-xs text-slate-300">{emp.designation}</TableCell>
-                  <TableCell>
-                    <Badge variant={emp.role === 'admin' ? 'purple' : 'neutral'} size="sm">
-                      {emp.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="success" size="sm" dot>
+      {/* Directory Table */}
+      <div className="data-table-container">
+        {filteredEmployees.length === 0 ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            No employees match the specified criteria.
+          </div>
+        ) : (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Employee ID</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEmployees.map((emp) => (
+                <tr key={emp.id}>
+                  <td>
+                    <div style={{ fontWeight: 600 }}>{emp.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{emp.email}</div>
+                  </td>
+                  <td>{emp.id}</td>
+                  <td>{emp.department}</td>
+                  <td>{emp.designation}</td>
+                  <td>{emp.role}</td>
+                  <td>
+                    <span className={getStatusBadgeClass(emp.status)}>
                       {emp.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <NavLink to={`/admin/employee/${emp.id}`}>
-                      <Button variant="outline" size="sm" icon={Eye}>
-                        Details
-                      </Button>
-                    </NavLink>
-                  </TableCell>
-                </TableRow>
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      className="nav-item"
+                      style={{ padding: '0.4rem 0.75rem', width: 'auto', display: 'inline-flex', gap: '0.4rem' }}
+                      onClick={() => navigate(`/admin/employees/${emp.id}`)}
+                    >
+                      <Eye size={16} />
+                      <span>View</span>
+                    </button>
+                  </td>
+                </tr>
               ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

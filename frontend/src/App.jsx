@@ -26,13 +26,13 @@ import EmployeeLeave from './pages/employee/Leave';
 import EmployeePayroll from './pages/employee/Payroll';
 import EmployeeNotifications from './pages/employee/Notifications';
 
-// Admin & HR Pages (Manoj)
-import AdminDashboard from './pages/admin/Dashboard';
+// Admin & HR Pages (Mukesh + Manoj)
+import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminEmployees from './pages/admin/Employees';
 import EmployeeDetails from './pages/admin/EmployeeDetails';
-import AdminAttendance from './pages/admin/Attendance';
-import LeaveRequests from './pages/admin/LeaveRequests';
-import AdminPayroll from './pages/admin/Payroll';
+import AdminAttendance from './pages/admin/AdminAttendance';
+import LeaveRequests from './pages/admin/AdminLeaves';
+import AdminPayroll from './pages/admin/AdminPayroll';
 import AdminNotifications from './pages/admin/Notifications';
 
 // Public Landing Page
@@ -90,6 +90,7 @@ export default function App() {
                   <Route path="/admin/employees" element={<AdminEmployees />} />
                   <Route path="/admin/employee/:id" element={<EmployeeDetails />} />
                   <Route path="/admin/attendance" element={<AdminAttendance />} />
+                  <Route path="/admin/leaves" element={<LeaveRequests />} />
                   <Route path="/admin/leave-requests" element={<LeaveRequests />} />
                   <Route path="/admin/payroll" element={<AdminPayroll />} />
                   <Route path="/admin/notifications" element={<AdminNotifications />} />
