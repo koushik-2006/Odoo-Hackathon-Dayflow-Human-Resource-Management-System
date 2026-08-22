@@ -1,3 +1,4 @@
+/** Module 7 — Employee Payroll Service */
 import api from './api';
 
 // Payroll Service for Employee Experience (Read-Only)

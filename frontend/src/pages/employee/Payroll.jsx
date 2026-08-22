@@ -1,3 +1,4 @@
+/** Module 7 — Employee Payroll */
 import React, { useState, useEffect } from 'react';
 import {
   CreditCard,

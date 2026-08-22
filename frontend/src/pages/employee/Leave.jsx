@@ -1,3 +1,4 @@
+/** Module 7 — Employee Leave Management */
 import React, { useState, useEffect } from 'react';
 import {
   Palmtree,

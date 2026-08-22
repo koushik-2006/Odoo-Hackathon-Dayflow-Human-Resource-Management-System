@@ -1,3 +1,4 @@
+/** Module 7 — Employee Leave Management Service */
 import api from './api';
 
 // Leave Management Service for Employee Experience
