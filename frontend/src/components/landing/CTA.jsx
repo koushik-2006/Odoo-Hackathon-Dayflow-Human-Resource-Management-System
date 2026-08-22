@@ -1,9 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, LogIn } from 'lucide-react';
+import SpecularButton from '../ui/SpecularButton';
 
 export default function CTA() {
+  const navigate = useNavigate();
+
   return (
     <section className="py-20 bg-transparent relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,23 +41,32 @@ export default function CTA() {
               Bring employees, attendance, leave, and payroll together with Dayflow.
             </p>
 
-            {/* Action Buttons */}
+            {/* Action Buttons with Specular Light Effect */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <Link
-                to="/register"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 rounded-xl text-base font-bold text-indigo-900 bg-white hover:bg-indigo-50 shadow-xl transition-all duration-200 hover:-translate-y-0.5"
+              <SpecularButton
+                size="lg"
+                radius={16}
+                baseColor="#6366f1"
+                lineColor="#ffffff"
+                textColor="#ffffff"
+                intensity={1.2}
+                onClick={() => navigate('/register')}
               >
                 Get Started
                 <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
+              </SpecularButton>
               
-              <Link
-                to="/login"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 rounded-xl text-base font-bold text-white bg-indigo-800/60 hover:bg-indigo-800/80 border border-white/20 backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5"
+              <SpecularButton
+                size="lg"
+                radius={16}
+                baseColor="#1e293b"
+                lineColor="#64748b"
+                textColor="#f8fafc"
+                onClick={() => navigate('/login')}
               >
                 <LogIn className="w-5 h-5 mr-2" />
                 Sign In
-              </Link>
+              </SpecularButton>
             </div>
 
           </div>

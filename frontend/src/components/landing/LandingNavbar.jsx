@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Layers, Menu, X, ArrowRight, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import SpecularButton from '../ui/SpecularButton';
 
 export default function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isAuthenticated, role } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -77,31 +79,44 @@ export default function LandingNavbar() {
             ))}
           </nav>
 
-          {/* Right Action Buttons */}
+          {/* Right Action Buttons with Specular Light Effect */}
           <div className="hidden md:flex items-center space-x-3">
             {isAuthenticated ? (
-              <Link
-                to={dashboardPath}
-                className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-md shadow-indigo-500/30 transition-all duration-200 active:scale-98"
+              <SpecularButton
+                size="sm"
+                radius={12}
+                baseColor="#4f46e5"
+                lineColor="#a5b4fc"
+                textColor="#ffffff"
+                onClick={() => navigate(dashboardPath)}
               >
-                <Sparkles className="w-4 h-4 mr-2" />
+                <Sparkles className="w-4 h-4 mr-1" />
                 Go to Dashboard
-              </Link>
+              </SpecularButton>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  className="px-4 py-2 text-sm font-semibold text-slate-200 hover:text-white hover:bg-slate-800/80 border border-slate-700/60 rounded-lg transition-colors"
+                <SpecularButton
+                  size="sm"
+                  radius={12}
+                  baseColor="#1e293b"
+                  lineColor="#64748b"
+                  textColor="#f8fafc"
+                  onClick={() => navigate('/login')}
                 >
                   Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 rounded-lg shadow-md shadow-indigo-500/30 transition-all duration-200 active:scale-98"
+                </SpecularButton>
+
+                <SpecularButton
+                  size="sm"
+                  radius={12}
+                  baseColor="#6366f1"
+                  lineColor="#ffffff"
+                  textColor="#ffffff"
+                  onClick={() => navigate('/register')}
                 >
                   Get Started
-                  <ArrowRight className="w-4 h-4 ml-1.5" />
-                </Link>
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </SpecularButton>
               </>
             )}
           </div>
@@ -111,7 +126,7 @@ export default function LandingNavbar() {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               type="button"
-              className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+              className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 focus:outline-hidden"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -122,44 +137,41 @@ export default function LandingNavbar() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-slate-200 bg-white/95 backdrop-blur-lg px-4 pt-3 pb-6 space-y-3 animate-fade-in shadow-xl">
+        <div className="md:hidden border-b border-slate-800 bg-slate-950/95 backdrop-blur-xl px-4 pt-3 pb-6 space-y-3 animate-fade-in shadow-xl">
           <div className="flex flex-col space-y-1 py-2">
             {navLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
                 onClick={(e) => handleNavClick(e, link.href)}
-                className="px-3 py-2.5 rounded-lg text-base font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50/60 transition-colors"
+                className="px-3 py-2.5 rounded-lg text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
               >
                 {link.name}
               </a>
             ))}
           </div>
-          <div className="pt-3 border-t border-slate-100 flex flex-col space-y-2.5">
+          <div className="pt-3 border-t border-slate-800 flex flex-col space-y-2.5">
             {isAuthenticated ? (
-              <Link
-                to={dashboardPath}
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
+              <button
+                onClick={() => { setMobileMenuOpen(false); navigate(dashboardPath); }}
+                className="w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm"
               >
                 Go to Dashboard
-              </Link>
+              </button>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                <button
+                  onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
+                  className="w-full text-center px-4 py-2.5 text-sm font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
                 >
                   Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setMobileMenuOpen(false)}
+                </button>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); navigate('/register'); }}
                   className="w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 rounded-lg shadow-md shadow-indigo-500/20"
                 >
                   Get Started Free
-                </Link>
+                </button>
               </>
             )}
           </div>
