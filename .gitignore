@@ -1,0 +1,36 @@
+# Environment Variables and Credentials
+.env
+.env.local
+.env.*.local
+*.env
+
+# Database Dumps and Backups
+*.dump
+*.sql.bak
+*.sql.gz
+*.tar
+*.bak
+
+# Security and Keys
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE and Editor Directories
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Node / Build / Dependency Artifacts (if applicable in project)
+node_modules/
+dist/
+build/
+*.log

@@ -1,0 +1,118 @@
+-- ==============================================================================
+-- Project: Dayflow - Human Resource Management System (HRMS)
+-- Tagline: Every workday, perfectly aligned.
+-- Database: PostgreSQL
+-- Database Name: dayflow
+-- Module: MODULE 1 — DATABASE INITIALIZATION
+-- ==============================================================================
+-- Description:
+-- Master schema foundation file for the Dayflow HRMS PostgreSQL database.
+-- At this initialization stage (Module 1), this file defines database-level
+-- extensions, configurations, and documents the planned modular schema architecture.
+--
+-- NOTE: Business entity tables (users, employees, attendance, payroll, etc.)
+-- will be introduced incrementally across subsequent modules via versioned
+-- migrations. NO BUSINESS TABLES ARE CREATED IN THIS FILE.
+-- ==============================================================================
+
+-- ------------------------------------------------------------------------------
+-- 1. Database-Level Extensions & Prerequisite Configuration
+-- ------------------------------------------------------------------------------
+-- Ensure cryptographic and UUID functions are available across schemas:
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- Set standard timezone to UTC for temporal consistency across modules:
+SET timezone = 'UTC';
+
+-- ==============================================================================
+-- PLANNED DATABASE MODULES SPECIFICATION
+-- ==============================================================================
+--
+-- 1. MODULE: users
+--    Purpose: Core authentication and account management.
+--    Scope:
+--      - Stores user credentials (argon2/bcrypt hashed passwords).
+--      - User role definitions (e.g., SUPER_ADMIN, HR_ADMIN, MANAGER, EMPLOYEE).
+--      - Account status flags (ACTIVE, INACTIVE, SUSPENDED, PENDING_VERIFICATION).
+--      - Timestamps for creation, last login, and account updates.
+--
+-- 2. MODULE: departments
+--    Purpose: Organizational structure and team hierarchy.
+--    Scope:
+--      - Department identifiers, codes, and descriptive names.
+--      - Hierarchical relationships (parent/child departments).
+--      - Department head assignments (linked to employees).
+--      - Operational status and budget center codes.
+--
+-- 3. MODULE: employees
+--    Purpose: Comprehensive employee profiles and employment lifecycle.
+--    Scope:
+--      - Primary employee identification (employee code, user reference).
+--      - Personal data (first name, last name, date of birth, contact details).
+--      - Employment metadata (designation, department reference, manager reference,
+--        employment type: FULL_TIME, PART_TIME, CONTRACTOR, join date, exit date).
+--      - Address and emergency contact records.
+--
+-- 4. MODULE: attendance
+--    Purpose: Daily time tracking, shift management, and punctuality logging.
+--    Scope:
+--      - Daily attendance records linked to employees.
+--      - Clock-in and clock-out timestamps with geographic/IP coordinates if enabled.
+--      - Shift schedules, work duration calculations, overtime tracking.
+--      - Status categorizations (PRESENT, ABSENT, HALF_DAY, LATE, ON_LEAVE).
+--
+-- 5. MODULE: leave_types
+--    Purpose: Configuration of organization-wide leave policies.
+--    Scope:
+--      - Leave type names (e.g., Annual Leave, Sick Leave, Maternity, Paternity, Casual).
+--      - Allocation allowances per calendar/fiscal year.
+--      - Policy flags (paid vs. unpaid, carry-forward eligibility, encashment limits).
+--
+-- 6. MODULE: leave_requests
+--    Purpose: Leave application lifecycle and approval workflows.
+--    Scope:
+--      - Application submissions (employee, leave_type, start_date, end_date, reason).
+--      - Workflow state tracking (PENDING, APPROVED, REJECTED, CANCELLED).
+--      - Approval hierarchy logs (manager review notes, approver employee ID, action timestamp).
+--
+-- 7. MODULE: payroll
+--    Purpose: Compensation structures, recurring salary processing, and payslip generation.
+--    Scope:
+--      - Salary structure definitions (base salary, fixed allowances, tax deductions).
+--      - Monthly pay run batches and processing states (DRAFT, CALCULATED, APPROVED, DISBURSED).
+--      - Itemized payslip records (gross earnings, statutory deductions, net payable).
+--      - Bank account details and payment disbursement references.
+--
+-- 8. MODULE: notifications
+--    Purpose: System alerts, notifications, and event broadcasts.
+--    Scope:
+--      - Targeted recipient user/employee IDs.
+--      - Notification categories (SYSTEM, LEAVE, ATTENDANCE, PAYROLL, ANNOUNCEMENT).
+--      - Delivery channel statuses (IN_APP, EMAIL, SMS, PUSH) and read/unread flags.
+--      - Actionable deep-links and rich message payload content.
+--
+-- 9. MODULE: documents
+--    Purpose: Centralized employee document repository and HR policy files.
+--    Scope:
+--      - Document metadata (title, category: ID_PROOF, CONTRACT, CERTIFICATION, POLICY).
+--      - Secure storage references / object storage URLs.
+--      - Verification status (PENDING_VERIFICATION, VERIFIED, REJECTED).
+--      - Access control tags and expiration tracking.
+--
+-- 10. MODULE: password_reset_tokens
+--     Purpose: Secure self-service account recovery.
+--     Scope:
+--       - Secure, hashed one-time verification tokens.
+--       - Expiration timestamps (time-to-live restrictions).
+--       - Consumption status (USED, EXPIRED, REVOKED) and request origin metadata.
+--
+-- 11. MODULE: audit_logs
+--     Purpose: Comprehensive compliance, security, and activity tracking.
+--     Scope:
+--       - Actor tracking (user ID, session ID, client IP address, user agent).
+--       - Action descriptors (CREATE, UPDATE, DELETE, LOGIN, EXPORT, PERMISSION_CHANGE).
+--       - Target resource name and entity identifier.
+--       - Structured JSON change payloads (before/after snapshots).
+--       - Immutable, append-only records with microsecond timestamps.
+-- ==============================================================================
