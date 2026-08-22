@@ -115,17 +115,46 @@ export default function EmployeeDetails() {
           </div>
           <div className="header-text">
             <h2>{employee.name}</h2>
-            <div className="header-meta">
+            <div className="header-meta" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span>{employee.id}</span>
-              <span style={{ margin: '0 0.5rem' }}>•</span>
+              <span>•</span>
               <span>{employee.department} • {employee.designation}</span>
+              <span>•</span>
+              <span className={`status-badge ${employee.status === 'Active' ? 'status-active' : 'status-inactive'}`}>
+                {employee.status === 'Active' ? '🟢 Active' : '⚪ Inactive'}
+              </span>
             </div>
           </div>
         </div>
-        <button className="action-btn-primary" onClick={() => setIsEditModalOpen(true)}>
-          <Edit2 size={16} />
-          <span>Edit Employee</span>
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button 
+            className="action-btn-primary" 
+            style={{ 
+              backgroundColor: employee.status === 'Active' ? 'var(--accent-red)' : 'var(--accent-green)',
+              borderColor: 'transparent'
+            }}
+            onClick={async () => {
+              try {
+                setLoading(true);
+                const nextStatus = employee.status === 'Active' ? 'Inactive' : 'Active';
+                const updated = await adminApi.toggleEmployeeStatus(employee.id, nextStatus);
+                setEmployee(prev => ({ ...prev, status: updated.status }));
+                setToastMessage(`✓ Employee status updated to ${updated.status}`);
+                setTimeout(() => setToastMessage(null), 3000);
+              } catch (err) {
+                alert('Failed to toggle status.');
+              } finally {
+                setLoading(false);
+              }
+            }}
+          >
+            {employee.status === 'Active' ? 'Deactivate Employee' : 'Activate Employee'}
+          </button>
+          <button className="action-btn-primary" onClick={() => setIsEditModalOpen(true)}>
+            <Edit2 size={16} />
+            <span>Edit Employee</span>
+          </button>
+        </div>
       </div>
 
       {/* Tab navigation headers */}

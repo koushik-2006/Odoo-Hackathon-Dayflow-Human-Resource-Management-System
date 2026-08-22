@@ -8,6 +8,7 @@ import EmployeeDetails from './pages/admin/EmployeeDetails';
 import AdminAttendance from './pages/admin/AdminAttendance';
 import AdminLeaves from './pages/admin/AdminLeaves';
 import AdminPayroll from './pages/admin/AdminPayroll';
+import EmployeePayroll from './pages/employee/EmployeePayroll';
 
 function MainAppShell() {
   const location = useLocation();
@@ -20,6 +21,7 @@ function MainAppShell() {
     if (pathname.includes('/admin/attendance')) return 'Workforce Attendance';
     if (pathname.includes('/admin/leaves')) return 'Leave Request Inbox';
     if (pathname.includes('/admin/payroll')) return 'Payroll & Salary Management';
+    if (pathname.includes('/employee/payroll')) return 'My Wages & Earnings';
     return 'Admin Panel';
   };
 
@@ -36,6 +38,7 @@ function MainAppShell() {
             <Route path="/admin/attendance" element={<AdminAttendance />} />
             <Route path="/admin/leaves" element={<AdminLeaves />} />
             <Route path="/admin/payroll" element={<AdminPayroll />} />
+            <Route path="/employee/payroll" element={<EmployeePayroll />} />
             
             {/* Redirect root to dashboard for convenience */}
             <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
