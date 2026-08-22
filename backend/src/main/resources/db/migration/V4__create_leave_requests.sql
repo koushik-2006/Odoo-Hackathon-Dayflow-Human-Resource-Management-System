@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS leave_requests (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    leave_type VARCHAR(30) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    total_days INT NOT NULL,
+    reason TEXT NOT NULL,
+    status VARCHAR(20) DEFAULT 'PENDING',
+    admin_comment TEXT,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
