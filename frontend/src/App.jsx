@@ -35,6 +35,9 @@ import LeaveRequests from './pages/admin/LeaveRequests';
 import AdminPayroll from './pages/admin/Payroll';
 import AdminNotifications from './pages/admin/Notifications';
 
+// Public Landing Page
+import Landing from './pages/Landing';
+
 function RootRedirect() {
   const { isAuthenticated, role } = useAuth();
   if (!isAuthenticated) {
@@ -55,8 +58,8 @@ export default function App() {
       <ToastProvider>
         <AuthProvider>
           <Routes>
-            {/* Root Navigation Dispatcher */}
-            <Route path="/" element={<RootRedirect />} />
+            {/* Public Landing Page Route */}
+            <Route path="/" element={<Landing />} />
 
             {/* Public Authentication Routes */}
             <Route element={<AuthLayout />}>
