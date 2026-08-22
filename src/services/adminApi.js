@@ -51,10 +51,25 @@ export const adminApi = {
     }
   },
   getEmployee: async (id) => {
-    await delay(300);
-    const emp = dummyEmployees.find(e => e.id === id);
-    if (!emp) throw new Error('Employee not found');
-    return { ...emp };
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/employees/${id}`);
+      const data = await res.json();
+      if (data.success) {
+        // Return object structure matching expectations
+        return {
+          ...data.employee,
+          attendance: data.attendance,
+          leave: data.leave,
+          payroll: data.payroll
+        };
+      }
+      throw new Error(data.message || 'Employee not found');
+    } catch (err) {
+      console.error('Error fetching employee from backend, falling back to dummyData', err);
+      const emp = dummyEmployees.find(e => e.id === id);
+      if (!emp) throw new Error('Employee not found');
+      return { ...emp };
+    }
   },
   updateEmployee: async (id, data) => {
     await delay(500);

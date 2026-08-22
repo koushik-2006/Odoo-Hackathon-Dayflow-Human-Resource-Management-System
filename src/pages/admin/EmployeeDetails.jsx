@@ -226,34 +226,28 @@ export default function EmployeeDetails() {
 
         {activeTab === 'attendance' && (
           <div className="detail-section">
-            <h3>Attendance Log</h3>
-            {attendanceRecords.length === 0 ? (
-              <p style={{ color: 'var(--text-secondary)' }}>No attendance logs captured for today.</p>
-            ) : (
-              <div className="data-table-container">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Check In</th>
-                      <th>Check Out</th>
-                      <th>Work Hours</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attendanceRecords.map((att) => (
-                      <tr key={att.id}>
-                        <td>{att.date}</td>
-                        <td>{att.checkIn}</td>
-                        <td>{att.checkOut}</td>
-                        <td>{att.hours}</td>
-                        <td>{att.status}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <h3>Attendance Log (Summary)</h3>
+            {employee.attendance ? (
+              <div className="info-rows">
+                <div className="info-row">
+                  <span className="info-label">Present Days</span>
+                  <span className="info-val" style={{ color: 'var(--accent-green)' }}>{employee.attendance.present}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Absent Days</span>
+                  <span className="info-val" style={{ color: 'var(--accent-red)' }}>{employee.attendance.absent}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">On Leave</span>
+                  <span className="info-val" style={{ color: 'var(--accent-yellow)' }}>{employee.attendance.leave}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Half Day</span>
+                  <span className="info-val" style={{ color: 'var(--accent-purple)' }}>{employee.attendance.halfDay}</span>
+                </div>
               </div>
+            ) : (
+              <p style={{ color: 'var(--text-secondary)' }}>No summary records available.</p>
             )}
           </div>
         )}
@@ -261,35 +255,52 @@ export default function EmployeeDetails() {
         {activeTab === 'leave' && (
           <div className="detail-section">
             <h3>Leave Inbox Details</h3>
-            <p style={{ color: 'var(--text-secondary)' }}>Leave balance information and request history dashboard.</p>
+            {employee.leave ? (
+              <div className="info-rows">
+                <div className="info-row">
+                  <span className="info-label">Approved Leaves</span>
+                  <span className="info-val" style={{ color: 'var(--accent-green)' }}>{employee.leave.approved}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Pending Approvals</span>
+                  <span className="info-val" style={{ color: 'var(--accent-yellow)' }}>{employee.leave.pending}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Rejected Requests</span>
+                  <span className="info-val" style={{ color: 'var(--accent-red)' }}>{employee.leave.rejected}</span>
+                </div>
+              </div>
+            ) : (
+              <p style={{ color: 'var(--text-secondary)' }}>No leave balance summary records available.</p>
+            )}
           </div>
         )}
 
         {activeTab === 'payroll' && (
           <div className="detail-section">
             <h3>Salary Info Details</h3>
-            {payrollRecord ? (
+            {employee.payroll ? (
               <div className="info-rows">
                 <div className="info-row">
                   <span className="info-label">Basic Salary</span>
-                  <span className="info-val">₹{payrollRecord.basicSalary.toLocaleString()}</span>
+                  <span className="info-val">₹{employee.payroll.basicSalary.toLocaleString()}</span>
                 </div>
                 <div className="info-row">
                   <span className="info-label">House Rent Allowance (HRA)</span>
-                  <span className="info-val">₹{payrollRecord.hra.toLocaleString()}</span>
+                  <span className="info-val">₹{employee.payroll.hra.toLocaleString()}</span>
                 </div>
                 <div className="info-row">
                   <span className="info-label">Special Allowances</span>
-                  <span className="info-val">₹{payrollRecord.allowances.toLocaleString()}</span>
+                  <span className="info-val">₹{employee.payroll.allowances.toLocaleString()}</span>
                 </div>
                 <div className="info-row">
                   <span className="info-label">PF & Tax Deductions</span>
-                  <span className="info-val">₹{payrollRecord.deductions.toLocaleString()}</span>
+                  <span className="info-val">₹{employee.payroll.deductions.toLocaleString()}</span>
                 </div>
                 <div className="info-row" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.5rem', marginTop: '0.5rem', fontWeight: 'bold' }}>
                   <span className="info-label">Calculated Net Salary</span>
                   <span className="info-val" style={{ color: 'var(--accent-green)' }}>
-                    ₹{(payrollRecord.basicSalary + payrollRecord.hra + payrollRecord.allowances - payrollRecord.deductions).toLocaleString()}
+                    ₹{employee.payroll.netSalary.toLocaleString()}
                   </span>
                 </div>
               </div>

@@ -16,6 +16,31 @@ let employees = [
   { id: 'EMP005', name: 'Charlie Brown', email: 'charlie@example.com', phone: '9876543214', department: 'IT', designation: 'QA Specialist', role: 'Employee', status: 'Inactive', joiningDate: '2024-06-20', gender: 'Male', dob: '1994-02-10', address: 'Pune', employmentType: 'FULL_TIME' }
 ];
 
+// Mock database metrics for details integration
+let attendanceSummary = {
+  EMP001: { present: 108, absent: 5, leave: 8, halfDay: 3 },
+  EMP002: { present: 120, absent: 2, leave: 4, halfDay: 1 },
+  EMP003: { present: 95, absent: 10, leave: 12, halfDay: 5 },
+  EMP004: { present: 88, absent: 4, leave: 30, halfDay: 2 },
+  EMP005: { present: 70, absent: 15, leave: 15, halfDay: 8 }
+};
+
+let leaveSummary = {
+  EMP001: { approved: 10, pending: 2, rejected: 1 },
+  EMP002: { approved: 5, pending: 1, rejected: 0 },
+  EMP003: { approved: 15, pending: 3, rejected: 2 },
+  EMP004: { approved: 30, pending: 0, rejected: 1 },
+  EMP005: { approved: 8, pending: 5, rejected: 4 }
+};
+
+let payrollRecords = {
+  EMP001: { basicSalary: 40000, hra: 8000, allowances: 5000, deductions: 3000, netSalary: 50000 },
+  EMP002: { basicSalary: 60000, hra: 12000, allowances: 8000, deductions: 5000, netSalary: 75000 },
+  EMP003: { basicSalary: 50000, hra: 10000, allowances: 6000, deductions: 4000, netSalary: 62000 },
+  EMP004: { basicSalary: 45000, hra: 9000, allowances: 5000, deductions: 3000, netSalary: 56000 },
+  EMP005: { basicSalary: 35000, hra: 7000, allowances: 4000, deductions: 2500, netSalary: 43500 }
+};
+
 // MODULE 21 — Admin Employee Management Route API
 app.get('/api/admin/employees', (req, res) => {
   const { search, department, role, status } = req.query;
@@ -48,7 +73,28 @@ app.get('/api/admin/employees', (req, res) => {
   });
 });
 
+// MODULE 22 — Admin Employee Details API
+app.get('/api/admin/employees/:id', (req, res) => {
+  const { id } = req.params;
+  const emp = employees.find(e => e.id === id);
+
+  if (!emp) {
+    return res.status(404).json({
+      success: false,
+      message: 'Employee not found'
+    });
+  }
+
+  res.json({
+    success: true,
+    employee: emp,
+    attendance: attendanceSummary[id] || { present: 0, absent: 0, leave: 0, halfDay: 0 },
+    leave: leaveSummary[id] || { approved: 0, pending: 0, rejected: 0 },
+    payroll: payrollRecords[id] || { basicSalary: 0, hra: 0, allowances: 0, deductions: 0, netSalary: 0 }
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Consolidated Backend Server running on http://localhost:${PORT}`);
 });
-export { employees };
+export { employees, attendanceSummary, leaveSummary, payrollRecords };
