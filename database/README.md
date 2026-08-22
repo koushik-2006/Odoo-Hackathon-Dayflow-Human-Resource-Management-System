@@ -2,8 +2,8 @@
 
 > **Project Name:** Dayflow - Human Resource Management System  
 > **Tagline:** *Every workday, perfectly aligned.*  
-> **Current Status:** Modules 1, 2, 3, 4, 5, 6, 7 (COMPLETE)  
-> **Next Module:** Module 8 — Payroll (NEXT)  
+> **Current Status:** Modules 1, 2, 3, 4, 5, 6, 7, 8 (COMPLETE)  
+> **Next Module:** Module 9 — Notifications (NEXT)  
 > **Database Engine:** PostgreSQL (Version 14+)  
 > **Database Name:** `dayflow`  
 > **Default Host:** `localhost`  
@@ -21,7 +21,7 @@ The **Dayflow HRMS** PostgreSQL database serves as the centralized, reliable, an
 - **Time & Attendance (Module 5):** Real-time daily clock-in/out tracking, working duration calculations, presence statuses (`PRESENT`, `ABSENT`, `HALF_DAY`, `LEAVE`), daily uniqueness guarantees, and history views.
 - **Leave Types & Policy Configuration (Module 6):** Standardized leave categories (`PAID`, `SICK`, `UNPAID`), compensation rules (`is_paid`), annual baseline entitlements (`default_days`), and operational toggles (`is_active`).
 - **Leave Requests & Approval Lifecycle (Module 7):** Employee leave applications, date-range validation, multi-tier approval workflows (`PENDING`, `APPROVED`, `REJECTED`), reviewer tracking, and audit history.
-- **Payroll & Compensation (Module 8):** Multi-component salary structures, allowances, deductions, gross/net pay calculation, and payment disbursement tracking.
+- **Payroll & Compensation (Module 8):** Multi-component salary structures (basic, HRA, conveyance, other allowances), statutory/custom deductions (tax, PF), gross/net pay calculation, pay cycle periods, and payment tracking.
 - **In-App Notifications & Alerts (Module 9):** Targeted user notifications, read/unread states, event classifiers, and polymorphic application referencing.
 - **Document Management (Module 10):** Employee records, identity proofs, contract lifecycle, and HR policy file tracking.
 - **Compliance & Audit Logging (Module 11 & 12):** Password recovery token security and immutable audit trails.
@@ -140,6 +140,31 @@ The `leave_requests` table manages the application, workflow status, review, and
 
 ---
 
+### Module 8: Payroll (Compensation & Pay Run Processing)
+The `payroll` table manages monthly/periodic employee compensation structures, salary component itemization, statutory deductions, net payable calculations, and payment tracking.
+
+- **Columns:**
+  - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `employee_id`: `UUID NOT NULL` (N:1 with `employees.id` on delete `RESTRICT`)
+  - `pay_period_start`: `DATE NOT NULL`
+  - `pay_period_end`: `DATE NOT NULL` ($\ge$ `pay_period_start`)
+  - `basic_salary`: `NUMERIC(12,2) NOT NULL DEFAULT 0.00`
+  - `housing_allowance`: `NUMERIC(12,2) NOT NULL DEFAULT 0.00`
+  - `transport_allowance`: `NUMERIC(12,2) NOT NULL DEFAULT 0.00`
+  - `other_allowances`: `NUMERIC(12,2) NOT NULL DEFAULT 0.00`
+  - `gross_salary`: `NUMERIC(12,2) NOT NULL DEFAULT 0.00`
+  - `tax_deduction`: `NUMERIC(12,2) NOT NULL DEFAULT 0.00`
+  - `other_deductions`: `NUMERIC(12,2) NOT NULL DEFAULT 0.00`
+  - `total_deductions`: `NUMERIC(12,2) NOT NULL DEFAULT 0.00`
+  - `net_salary`: `NUMERIC(12,2) NOT NULL DEFAULT 0.00`
+  - `currency`: `VARCHAR(3) NOT NULL DEFAULT 'INR'`
+  - `payment_date`: `DATE NULL`
+  - `status`: `VARCHAR(30) NOT NULL DEFAULT 'DRAFT'` (`DRAFT`, `PROCESSED`, `PAID`, `CANCELLED`)
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+
+---
+
 ## 3. Relational Architecture & Entity Roadmap
 
 ```text
@@ -153,15 +178,15 @@ The `leave_requests` table manages the application, workflow status, review, and
 │  Module 5  │ Attendance                  │  COMPLETE   │
 │  Module 6  │ Leave Types                 │  COMPLETE   │
 │  Module 7  │ Leave Requests              │  COMPLETE   │
-│  Module 8  │ Payroll                     │    NEXT     │
-│  Module 9  │ Notifications               │   PLANNED   │
+│  Module 8  │ Payroll                     │  COMPLETE   │
+│  Module 9  │ Notifications               │    NEXT     │
 │  Module 10 │ Documents                   │   PLANNED   │
 │  Module 11 │ Password Reset              │   PLANNED   │
 │  Module 12 │ Audit Logs                  │   PLANNED   │
 └────────────┴─────────────────────────────┴─────────────┘
 ```
 
-### Entity Relationship Diagram (Modules 2–7)
+### Entity Relationship Diagram (Modules 2–8)
 
 ```text
     users (Module 2)              departments (Module 3)
@@ -183,11 +208,11 @@ The `leave_requests` table manages the application, workflow status, review, and
    │ employee_code   VARCHAR(50) NOT NULL UNIQUE      │
    │ first_name      VARCHAR(100) NOT NULL            │
    │ last_name       VARCHAR(100) NOT NULL            │
-   └───────┬───────────────────────────────┬──────────┘
-           │ 1                             │ 1
-           │                               │
-           │ N                             │ N
-   ┌───────▼──────────────┐        ┌───────▼──────────────────────────┐
+   └───────┬───────────────────────────────┬──────┬───┘
+           │ 1                             │ 1    │ 1
+           │                               │      │
+           │ N                             │ N    │ N
+   ┌───────▼──────────────┐        ┌───────▼──────▼───────────────────┐
    │ attendance (Module 5)│        │ leave_requests (Module 7)        │
    │ -------------------- │        │ -------------------------------- │
    │ id          UUID PK  │        │ id            UUID PRIMARY KEY   │
@@ -207,6 +232,16 @@ The `leave_requests` table manages the application, workflow status, review, and
                                    │ name        VARCHAR  │
                                    │ is_paid     BOOLEAN  │
                                    └──────────────────────┘
+                                           │
+                                   ┌───────▼──────────────┐
+                                   │ payroll (Module 8)   │
+                                   │ -------------------- │
+                                   │ id          UUID PK  │
+                                   │ employee_id UUID FK  │
+                                   │ net_salary  NUMERIC  │
+                                   │ status      VARCHAR  │
+                                   │ UNIQUE(emp, start,end│
+                                   └──────────────────────┘
 ```
 
 ---
@@ -222,7 +257,8 @@ database/
 │   ├── V3__create_employees.sql     # Migration V3: employees table (1:1 users, N:1 departments)
 │   ├── V4__create_attendance.sql    # Migration V4: attendance table (1:N employees, unique date)
 │   ├── V5__create_leave_types.sql   # Migration V5: leave_types master policy table
-│   └── V6__create_leave_requests.sql# Migration V6: leave_requests employee applications
+│   ├── V6__create_leave_requests.sql# Migration V6: leave_requests employee applications
+│   └── V7__create_payroll.sql       # Migration V7: payroll employee compensation table
 ├── seeds/
 │   ├── README.md                    # Seed data execution dependencies and rules
 │   ├── departments.sql              # Seed data for baseline departments (IT, HR, FIN, MKT, SALES, OPS)
@@ -230,7 +266,8 @@ database/
 │   ├── employees.sql                # Seed data for demo employee profiles
 │   ├── attendance.sql               # Seed data for multi-day employee attendance logs
 │   ├── leave_types.sql              # Seed data for baseline leave categories (PAID, SICK, UNPAID)
-│   └── leave_requests.sql           # Seed data for demo leave requests (PENDING, APPROVED, REJECTED)
+│   ├── leave_requests.sql           # Seed data for demo leave requests (PENDING, APPROVED, REJECTED)
+│   └── payroll.sql                  # Seed data for multi-period employee payroll records
 ├── schema.sql                       # Master schema definition & active tables
 ├── seed.sql                         # Master seed orchestration script (strict dependency order)
 └── README.md                        # Master database documentation (this file)
@@ -325,7 +362,7 @@ DB_TIMEOUT_SECONDS=30
 
 1. **Zero Credential Exposure:** Never commit `.env` files, plaintext passwords, private keys, or connection strings to version control.
 2. **Password Cryptography:** User passwords must always be hashed using modern algorithms (bcrypt/Argon2) with high work factors before insertion into the database.
-3. **Decoupled Architecture:** Authentication credentials remain strictly isolated in the `users` table. Employee profiles, attendance logs, leave records, and document metadata hold operational metadata without credential columns.
+3. **Decoupled Architecture:** Authentication credentials remain strictly isolated in the `users` table. Employee profiles, attendance logs, leave records, and payroll data hold operational metadata without credential columns.
 4. **Principle of Least Privilege:** Production applications should connect using an application-specific user account granted only `DML` privileges (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), rather than the `postgres` superuser.
 5. **Encrypted Transport:** Enable SSL (`DB_SSL_MODE=require` or `verify-full`) for all database connections in staging and production deployments.
 6. **SQL Injection Prevention:** All backend queries must utilize parameterized statements or prepared queries without exception.

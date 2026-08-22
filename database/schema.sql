@@ -3,8 +3,8 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Current Module: MODULE 7 — LEAVE REQUESTS (COMPLETED)
--- Next Module: MODULE 8 — PAYROLL
+-- Current Module: MODULE 8 — PAYROLL (COMPLETED)
+-- Next Module: MODULE 9 — NOTIFICATIONS
 -- ==============================================================================
 -- Description:
 -- Master schema definition file for the Dayflow HRMS PostgreSQL database.
@@ -303,6 +303,71 @@ BEFORE UPDATE ON leave_requests
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
+-- ------------------------------------------------------------------------------
+-- MODULE 8: payroll
+-- Purpose: Periodic employee compensation, allowances, deductions, and payment status.
+-- Relationships:
+--   - employees (N : 1): payroll.employee_id -> employees.id (NOT NULL, RESTRICT)
+-- Cardinality & Rules:
+--   - One employee has at most ONE payroll record per exact pay cycle:
+--     UNIQUE(employee_id, pay_period_start, pay_period_end)
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS payroll (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    employee_id UUID NOT NULL,
+    pay_period_start DATE NOT NULL,
+    pay_period_end DATE NOT NULL,
+    basic_salary NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    housing_allowance NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    transport_allowance NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    other_allowances NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    gross_salary NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    tax_deduction NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    other_deductions NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    total_deductions NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    net_salary NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    currency VARCHAR(3) NOT NULL DEFAULT 'INR',
+    payment_date DATE NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'DRAFT',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_payroll_employee FOREIGN KEY (employee_id)
+        REFERENCES employees (id)
+        ON DELETE RESTRICT,
+    CONSTRAINT uq_payroll_employee_period UNIQUE (employee_id, pay_period_start, pay_period_end),
+    CONSTRAINT chk_payroll_period CHECK (
+        pay_period_end >= pay_period_start
+    ),
+    CONSTRAINT chk_payroll_currency CHECK (
+        currency ~ '^[A-Z]{3}$'
+    ),
+    CONSTRAINT chk_payroll_status CHECK (
+        status IN ('DRAFT', 'PROCESSED', 'PAID', 'CANCELLED')
+    ),
+    CONSTRAINT chk_payroll_basic_salary CHECK (basic_salary >= 0),
+    CONSTRAINT chk_payroll_housing_allowance CHECK (housing_allowance >= 0),
+    CONSTRAINT chk_payroll_transport_allowance CHECK (transport_allowance >= 0),
+    CONSTRAINT chk_payroll_other_allowances CHECK (other_allowances >= 0),
+    CONSTRAINT chk_payroll_gross_salary CHECK (gross_salary >= 0),
+    CONSTRAINT chk_payroll_tax_deduction CHECK (tax_deduction >= 0),
+    CONSTRAINT chk_payroll_other_deductions CHECK (other_deductions >= 0),
+    CONSTRAINT chk_payroll_total_deductions CHECK (total_deductions >= 0),
+    CONSTRAINT chk_payroll_net_salary CHECK (net_salary >= 0)
+);
+
+CREATE INDEX IF NOT EXISTS idx_payroll_employee_id ON payroll(employee_id);
+CREATE INDEX IF NOT EXISTS idx_payroll_status ON payroll(status);
+CREATE INDEX IF NOT EXISTS idx_payroll_payment_date ON payroll(payment_date);
+CREATE INDEX IF NOT EXISTS idx_payroll_period_start ON payroll(pay_period_start DESC);
+CREATE INDEX IF NOT EXISTS idx_payroll_employee_status ON payroll(employee_id, status);
+
+DROP TRIGGER IF EXISTS trg_payroll_updated_at ON payroll;
+CREATE TRIGGER trg_payroll_updated_at
+BEFORE UPDATE ON payroll
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
 -- ==============================================================================
 -- PLANNED DATABASE MODULES SPECIFICATION
 -- ==============================================================================
@@ -313,16 +378,9 @@ EXECUTE FUNCTION update_updated_at_column();
 -- 4. MODULE: attendance [STATUS: IMPLEMENTED in Module 5]
 -- 5. MODULE: leave_types [STATUS: IMPLEMENTED in Module 6]
 -- 6. MODULE: leave_requests [STATUS: IMPLEMENTED in Module 7]
+-- 7. MODULE: payroll [STATUS: IMPLEMENTED in Module 8]
 --
--- 7. MODULE: payroll [STATUS: NEXT - Module 8]
---    Purpose: Employee salary structure, periodic pay runs, allowances, and deductions.
---    Scope:
---      - Salary components: Basic pay, HRA, Transport, Medical, Special allowances.
---      - Statutory and custom deductions: Income Tax / TDS, PF, insurance.
---      - Pay period start/end dates, gross pay, net pay, and currency.
---      - Pay slip generation metadata and payment execution statuses.
---
--- 8. MODULE: notifications [STATUS: PLANNED - Module 9]
+-- 8. MODULE: notifications [STATUS: NEXT - Module 9]
 --    Purpose: In-app user notifications and workflow event alerts.
 --    Scope:
 --      - Notification delivery payload (type, title, message, link).

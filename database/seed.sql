@@ -3,7 +3,7 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Current Module: MODULE 7 — LEAVE REQUESTS
+-- Current Module: MODULE 8 — PAYROLL
 -- ==============================================================================
 -- Description:
 -- Master seed file for the Dayflow HRMS PostgreSQL database.
@@ -30,3 +30,6 @@
 
 -- 6. Employee leave applications & approval logs (Module 7)
 \ir seeds/leave_requests.sql
+
+-- 7. Employee compensation structures & periodic pay runs (Module 8)
+\ir seeds/payroll.sql

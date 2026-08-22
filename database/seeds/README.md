@@ -22,9 +22,11 @@ Because relational integrity is enforced by foreign keys, seed files MUST be exe
 | **4** | `attendance.sql` | Multi-day clock-in/out logs, shift records, working minutes, and punctuality flags | **Module 5 (ACTIVE)** | **Depends on `employees` (N:1)** |
 | **5** | `leave_types.sql` | Standard organizational leave policies (`PAID`, `SICK`, `UNPAID`) | **Module 6 (ACTIVE)** | *Master Reference Data (Independent)* |
 | **6** | `leave_requests.sql` | Demonstration leave applications across `PENDING`, `APPROVED`, and `REJECTED` states | **Module 7 (ACTIVE)** | **Depends on `employees` (N:1), `leave_types` (N:1), & `users` (N:1)** |
-| **7** | `payroll.sql` | Salary structure records, monthly pay runs, allowances, deductions, and payment records | *Module 8 (Planned)* | **Depends on `employees`** |
+| **7** | `payroll.sql` | Salary structure records, monthly pay runs, allowances, deductions, and payment records | **Module 8 (ACTIVE)** | **Depends on `employees` (N:1)** |
 | **8** | `notifications.sql` | Sample in-app alerts, broadcast notifications, and unread indicators | *Module 9 (Planned)* | **Depends on `users`** |
 | **9** | `documents.sql` | Centralized employee HR files, identity proofs, contracts, and company policies | *Module 10 (Planned)* | **Depends on `employees`** |
+
+> ⚠️ **Dependency Rule:** `payroll.sql` references `employees(id)` as the recipient employee. It must be executed after `employees.sql`.
 
 ---
 
