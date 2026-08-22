@@ -37,7 +37,10 @@ public class LeaveRequest {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @Column(name = "total_days", nullable = false)
+    @Column(name = "number_of_days", nullable = false)
+    private Integer numberOfDays;
+
+    @Column(name = "total_days")
     private Integer totalDays;
 
     @Column(nullable = false, columnDefinition = "TEXT")
@@ -50,6 +53,9 @@ public class LeaveRequest {
     @Column(name = "admin_comment", columnDefinition = "TEXT")
     private String adminComment;
 
+    @Column(name = "approved_by")
+    private String approvedBy;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -57,4 +63,14 @@ public class LeaveRequest {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    @PreUpdate
+    public void syncDays() {
+        if (numberOfDays != null) {
+            totalDays = numberOfDays;
+        } else if (totalDays != null) {
+            numberOfDays = totalDays;
+        }
+    }
 }

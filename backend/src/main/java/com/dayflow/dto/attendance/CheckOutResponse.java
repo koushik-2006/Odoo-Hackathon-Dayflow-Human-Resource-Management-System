@@ -15,6 +15,8 @@ public class CheckOutResponse {
     private Long id;
     private LocalDateTime checkOutTime;
     private Double totalHours;
+    private Double workingHours;
+    private String formattedWorkingHours;
     private String status;
     private String message;
 }

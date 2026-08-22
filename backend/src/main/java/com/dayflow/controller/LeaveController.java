@@ -27,14 +27,14 @@ public class LeaveController {
 
     private final LeaveService leaveService;
 
-    @PostMapping("/apply")
-    @Operation(summary = "Apply for leave")
+    @PostMapping({"", "/apply"})
+    @Operation(summary = "Apply for leave (calculates number of days automatically)")
     public ResponseEntity<ApiResponse<LeaveResponse>> applyLeave(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody LeaveRequestDto requestDto
     ) {
         LeaveResponse response = leaveService.applyLeave(userDetails.getId(), requestDto);
-        return new ResponseEntity<>(ApiResponse.success("Leave application submitted", response), HttpStatus.CREATED);
+        return new ResponseEntity<>(ApiResponse.success("Leave application submitted successfully", response), HttpStatus.CREATED);
     }
 
     @GetMapping("/my-requests")
@@ -60,7 +60,7 @@ public class LeaveController {
             @RequestBody(required = false) ApproveLeaveRequest approveRequest
     ) {
         LeaveResponse response = leaveService.approveLeave(id, approveRequest);
-        return ResponseEntity.ok(ApiResponse.success("Leave request approved", response));
+        return ResponseEntity.ok(ApiResponse.success("Leave request approved successfully", response));
     }
 
     @PutMapping("/{id}/reject")

@@ -21,7 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/attendance")
 @RequiredArgsConstructor
-@Tag(name = "Attendance Management", description = "Endpoints for employee check-in, check-out, and history")
+@Tag(name = "Attendance Management", description = "Endpoints for employee check-in, check-out, and attendance history")
 public class AttendanceController {
 
     private final AttendanceService attendanceService;
@@ -34,17 +34,36 @@ public class AttendanceController {
     }
 
     @PostMapping("/check-out")
-    @Operation(summary = "Record employee daily check-out")
+    @Operation(summary = "Record employee daily check-out and calculate working hours")
     public ResponseEntity<ApiResponse<CheckOutResponse>> checkOut(@AuthenticationPrincipal CustomUserDetails userDetails) {
         CheckOutResponse response = attendanceService.checkOut(userDetails.getId());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @GetMapping("/my-history")
-    @Operation(summary = "Get employee's personal attendance history")
-    public ResponseEntity<ApiResponse<List<AttendanceResponse>>> getMyAttendanceHistory(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<AttendanceResponse> history = attendanceService.getMyAttendanceHistory(userDetails.getId());
+    @GetMapping("/me")
+    @Operation(summary = "Get employee's attendance history with optional filters (month, year, startDate, endDate)")
+    public ResponseEntity<ApiResponse<List<AttendanceResponse>>> getMyAttendance(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        List<AttendanceResponse> history = attendanceService.getMyAttendanceHistoryFiltered(
+                userDetails.getId(), month, year, startDate, endDate);
         return ResponseEntity.ok(ApiResponse.success(history));
+    }
+
+    @GetMapping("/my-history")
+    @Operation(summary = "Get employee's personal attendance history (alias for /me)")
+    public ResponseEntity<ApiResponse<List<AttendanceResponse>>> getMyAttendanceHistory(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        return getMyAttendance(userDetails, month, year, startDate, endDate);
     }
 
     @GetMapping

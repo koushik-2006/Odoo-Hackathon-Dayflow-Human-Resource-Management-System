@@ -7,6 +7,7 @@ import com.dayflow.dto.leave.RejectLeaveRequest;
 import com.dayflow.entity.Employee;
 import com.dayflow.entity.LeaveRequest;
 import com.dayflow.enums.LeaveStatus;
+import com.dayflow.enums.LeaveType;
 import com.dayflow.exception.BadRequestException;
 import com.dayflow.exception.ResourceNotFoundException;
 import com.dayflow.mapper.LeaveMapper;
@@ -33,20 +34,31 @@ public class LeaveServiceImpl implements LeaveService {
     @Transactional
     public LeaveResponse applyLeave(Long userId, LeaveRequestDto requestDto) {
         Employee employee = employeeRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found for user ID: " + userId));
 
         if (requestDto.getEndDate().isBefore(requestDto.getStartDate())) {
             throw new BadRequestException("End date cannot be before start date");
         }
 
+        // Map shorthand leave types (PAID -> PAID_LEAVE, SICK -> SICK_LEAVE, UNPAID -> UNPAID_LEAVE)
+        LeaveType leaveType = requestDto.getLeaveType();
+        if (leaveType == LeaveType.PAID) {
+            leaveType = LeaveType.PAID_LEAVE;
+        } else if (leaveType == LeaveType.SICK) {
+            leaveType = LeaveType.SICK_LEAVE;
+        } else if (leaveType == LeaveType.UNPAID) {
+            leaveType = LeaveType.UNPAID_LEAVE;
+        }
+
+        // Strictly calculate number of days on the backend
         long days = ChronoUnit.DAYS.between(requestDto.getStartDate(), requestDto.getEndDate()) + 1;
 
         LeaveRequest leaveRequest = LeaveRequest.builder()
                 .employee(employee)
-                .leaveType(requestDto.getLeaveType())
+                .leaveType(leaveType)
                 .startDate(requestDto.getStartDate())
                 .endDate(requestDto.getEndDate())
-                .totalDays((int) days)
+                .numberOfDays((int) days)
                 .reason(requestDto.getReason())
                 .status(LeaveStatus.PENDING)
                 .build();
@@ -59,7 +71,7 @@ public class LeaveServiceImpl implements LeaveService {
     @Transactional(readOnly = true)
     public List<LeaveResponse> getMyLeaveRequests(Long userId) {
         Employee employee = employeeRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found for user ID: " + userId));
         return leaveRequestRepository.findByEmployeeOrderByCreatedAtDesc(employee).stream()
                 .map(leaveMapper::toResponse)
                 .collect(Collectors.toList());
@@ -95,7 +107,9 @@ public class LeaveServiceImpl implements LeaveService {
                 .orElseThrow(() -> new ResourceNotFoundException("Leave request not found with ID: " + leaveId));
 
         leaveRequest.setStatus(LeaveStatus.REJECTED);
-        leaveRequest.setAdminComment(rejectRequest.getAdminComment());
+        if (rejectRequest != null) {
+            leaveRequest.setAdminComment(rejectRequest.getAdminComment());
+        }
 
         LeaveRequest updated = leaveRequestRepository.save(leaveRequest);
         return leaveMapper.toResponse(updated);

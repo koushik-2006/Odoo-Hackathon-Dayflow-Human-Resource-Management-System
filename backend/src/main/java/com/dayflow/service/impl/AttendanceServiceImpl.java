@@ -78,9 +78,13 @@ public class AttendanceServiceImpl implements AttendanceService {
         LocalDateTime now = LocalDateTime.now();
         attendance.setCheckOut(now);
 
-        long minutes = Duration.between(attendance.getCheckIn(), now).toMinutes();
-        double hours = Math.round((minutes / 60.0) * 100.0) / 100.0;
+        long totalMinutes = Duration.between(attendance.getCheckIn(), now).toMinutes();
+        double hours = Math.round((totalMinutes / 60.0) * 100.0) / 100.0;
         attendance.setWorkingHours(hours);
+
+        long hrs = totalMinutes / 60;
+        long mins = totalMinutes % 60;
+        String formattedHours = hrs + "h " + mins + "m";
 
         Attendance saved = attendanceRepository.save(attendance);
 
@@ -88,16 +92,41 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .id(saved.getId())
                 .checkOutTime(saved.getCheckOut())
                 .totalHours(hours)
+                .workingHours(hours)
+                .formattedWorkingHours(formattedHours)
                 .status(saved.getStatus().name())
-                .message("Checked out successfully. Total working hours: " + hours + " hrs")
+                .message("Checked out successfully. Working Hours: " + formattedHours)
                 .build();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AttendanceResponse> getMyAttendanceHistory(Long userId) {
+        return getMyAttendanceHistoryFiltered(userId, null, null, null, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AttendanceResponse> getMyAttendanceHistoryFiltered(Long userId, Integer month, Integer year, LocalDate startDate, LocalDate endDate) {
         Employee employee = employeeRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found for user ID: " + userId));
+
+        if (startDate != null && endDate != null) {
+            return attendanceRepository.findByEmployeeAndAttendanceDateBetweenOrderByAttendanceDateDesc(employee, startDate, endDate).stream()
+                    .map(attendanceMapper::toResponse)
+                    .collect(Collectors.toList());
+        }
+
+        if (month != null || year != null) {
+            int targetYear = year != null ? year : LocalDate.now().getYear();
+            int targetMonth = month != null ? month : LocalDate.now().getMonthValue();
+            LocalDate start = LocalDate.of(targetYear, targetMonth, 1);
+            LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
+            return attendanceRepository.findByEmployeeAndAttendanceDateBetweenOrderByAttendanceDateDesc(employee, start, end).stream()
+                    .map(attendanceMapper::toResponse)
+                    .collect(Collectors.toList());
+        }
+
         return attendanceRepository.findByEmployeeOrderByAttendanceDateDesc(employee).stream()
                 .map(attendanceMapper::toResponse)
                 .collect(Collectors.toList());
@@ -107,6 +136,21 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Transactional(readOnly = true)
     public List<AttendanceResponse> getAttendanceByDate(LocalDate date) {
         return attendanceRepository.findByAttendanceDate(date).stream()
+                .map(attendanceMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AttendanceResponse> getAdminAttendance(Long employeeId, String employee, LocalDate date, String department, AttendanceStatus status) {
+        Long searchEmpId = employeeId;
+        if (searchEmpId == null && employee != null) {
+            try {
+                searchEmpId = Long.parseLong(employee.trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return attendanceRepository.findAdminAttendanceFiltered(searchEmpId, employee, date, department, status).stream()
                 .map(attendanceMapper::toResponse)
                 .collect(Collectors.toList());
     }

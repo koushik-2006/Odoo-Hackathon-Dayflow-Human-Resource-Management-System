@@ -17,13 +17,17 @@ import java.time.LocalDateTime;
 public class LeaveResponse {
     private Long id;
     private Long employeeId;
+    private String employeeCode;
     private String employeeName;
     private LeaveType leaveType;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Integer numberOfDays;
     private Integer totalDays;
     private String reason;
     private LeaveStatus status;
     private String adminComment;
+    private String approvedBy;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

@@ -9,20 +9,33 @@ public class LeaveMapper {
 
     public LeaveResponse toResponse(LeaveRequest leaveRequest) {
         if (leaveRequest == null) return null;
-        String name = leaveRequest.getEmployee() != null ?
-                leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName() : "Unknown";
+        
+        String name = "Unknown";
+        String code = null;
+        Long empId = null;
+
+        if (leaveRequest.getEmployee() != null) {
+            empId = leaveRequest.getEmployee().getId();
+            name = leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName();
+            code = leaveRequest.getEmployee().getEmployeeCode();
+        }
+
         return LeaveResponse.builder()
                 .id(leaveRequest.getId())
-                .employeeId(leaveRequest.getEmployee() != null ? leaveRequest.getEmployee().getId() : null)
+                .employeeId(empId)
+                .employeeCode(code)
                 .employeeName(name)
                 .leaveType(leaveRequest.getLeaveType())
                 .startDate(leaveRequest.getStartDate())
                 .endDate(leaveRequest.getEndDate())
-                .totalDays(leaveRequest.getTotalDays())
+                .numberOfDays(leaveRequest.getNumberOfDays())
+                .totalDays(leaveRequest.getNumberOfDays())
                 .reason(leaveRequest.getReason())
                 .status(leaveRequest.getStatus())
                 .adminComment(leaveRequest.getAdminComment())
+                .approvedBy(leaveRequest.getApprovedBy())
                 .createdAt(leaveRequest.getCreatedAt())
+                .updatedAt(leaveRequest.getUpdatedAt())
                 .build();
     }
 }

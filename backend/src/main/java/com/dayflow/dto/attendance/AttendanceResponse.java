@@ -16,10 +16,16 @@ import java.time.LocalDateTime;
 public class AttendanceResponse {
     private Long id;
     private Long employeeId;
+    private String employeeCode;
     private String employeeName;
+    private String department;
+    private LocalDate attendanceDate;
     private LocalDate date;
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
+    private Double workingHours;
     private Double workHours;
+    private String formattedWorkingHours;
     private AttendanceStatus status;
+    private String remarks;
 }
