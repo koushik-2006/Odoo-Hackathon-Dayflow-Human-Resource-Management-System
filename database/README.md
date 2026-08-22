@@ -2,7 +2,8 @@
 
 > **Project Name:** Dayflow - Human Resource Management System  
 > **Tagline:** *Every workday, perfectly aligned.*  
-> **Current Module:** Module 2 — Users (COMPLETED) / Module 3 — Departments (NEXT)  
+> **Current Status:** Module 1 (COMPLETE), Module 2 (COMPLETE), Module 3 (COMPLETE)  
+> **Next Module:** Module 4 — Employees (PLANNED)  
 > **Database Engine:** PostgreSQL (Version 14+)  
 > **Database Name:** `dayflow`  
 > **Default Host:** `localhost`  
@@ -14,9 +15,9 @@
 
 The **Dayflow HRMS** PostgreSQL database serves as the centralized, reliable, and secure data persistence layer for modern organizational human resource operations. Designed for scalability, high data integrity, and role-based access governance, this database supports:
 
-- **Authentication & Security:** Secure credential storage, multi-factor token lifecycle, and role-based access control (RBAC).
-- **Organizational Structure:** Multi-level department hierarchies, designations, and administrative boundaries.
-- **Employee Lifecycle:** Complete employee records from onboarding to offboarding, reporting lines, and profile details.
+- **Authentication & Security:** Secure credential storage, multi-factor token lifecycle, and standardized role-based access control (`ADMIN`, `HR`, `EMPLOYEE`).
+- **Organizational Structure & Departments:** Multi-department mapping, normalized department codes, team divisions, and soft-deactivation tracking.
+- **Employee Lifecycle (Module 4):** Decoupled 1:1 user profile records, employee codes, reporting lines, and department linkages.
 - **Time & Attendance:** Real-time clock-in/out tracking, shift configurations, and punctuality analytics.
 - **Leave Management:** Custom leave policies, quota tracking, multi-tier approval workflows, and audit history.
 - **Payroll & Compensation:** Flexible salary structures, automated deductions, monthly pay run processing, and itemized payslip generation.
@@ -26,30 +27,57 @@ The **Dayflow HRMS** PostgreSQL database serves as the centralized, reliable, an
 
 ---
 
-## 2. Current Module Status
+## 2. Implemented Modules & Active Schema
 
-| Attribute | Details |
-| :--- | :--- |
-| **Completed Modules** | **Module 1 (Database Initialization)**, **Module 2 (Users)** |
-| **Active / Next Module** | **Module 3: Departments** |
-| **Active Tables** | `users` |
-| **Active Migrations** | `V1__create_users.sql` |
-| **Active Seeds** | `database/seeds/users.sql` |
+### Module 2: Users (Core Authentication)
+The `users` table handles authentication, login credentials, and account operational status.
+
+- **Role Model (Strict Dayflow RBAC):**
+  - `ADMIN`: Full administrative control across the HRMS (employee management, department administration, global attendance, leave approvals, payroll oversight).
+  - `HR`: Human resources operational access (employee profile management, leave approvals, attendance monitoring, payroll view).
+  - `EMPLOYEE`: Standard employee access (view own profile, check-in/out attendance, apply for leave, view personal payslips).
+- **Columns:**
+  - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `email`: `VARCHAR(255) NOT NULL UNIQUE`
+  - `password_hash`: `VARCHAR(255) NOT NULL` (bcrypt hash)
+  - `role`: `VARCHAR(50) NOT NULL DEFAULT 'EMPLOYEE'` (CHECK: `ADMIN`, `HR`, `EMPLOYEE`)
+  - `status`: `VARCHAR(50) NOT NULL DEFAULT 'ACTIVE'` (CHECK: `ACTIVE`, `INACTIVE`, `SUSPENDED`, `PENDING_VERIFICATION`)
+  - `is_verified`: `BOOLEAN NOT NULL DEFAULT FALSE`
+  - `last_login_at`: `TIMESTAMPTZ NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Architectural Note:** `employee_id` and `employee_code` are **NOT** stored in the `users` table. The `users` table is strictly dedicated to authentication.
 
 ---
 
-## 3. Database Module Roadmap
+### Module 3: Departments (Organizational Units)
+The `departments` table stores organizational business units and operational divisions.
 
-The Dayflow database architecture is partitioned into 12 structured, sequential modules:
+- **Columns:**
+  - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `name`: `VARCHAR(100) NOT NULL UNIQUE` (e.g., "Information Technology")
+  - `code`: `VARCHAR(20) NOT NULL UNIQUE` (e.g., "IT", "HR", "FIN")
+  - `description`: `TEXT NULL`
+  - `is_active`: `BOOLEAN NOT NULL DEFAULT TRUE` (Soft deactivation flag)
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Integrity Constraints:**
+  - `uq_departments_name`: Unique department name.
+  - `uq_departments_code`: Unique normalized uppercase code (`chk_departments_code_format`).
+  - `chk_departments_name_not_empty`: Prevents empty name strings.
+
+---
+
+## 3. Relational Architecture & Future Modules
 
 ```text
 ┌────────────────────────────────────────────────────────┐
 │             DAYFLOW HRMS DATABASE ROADMAP              │
 ├────────────┬─────────────────────────────┬─────────────┤
-│  Module 1  │ Database Initialization     │  COMPLETED  │
-│  Module 2  │ Users                       │  COMPLETED  │
-│  Module 3  │ Departments                 │    NEXT     │
-│  Module 4  │ Employees                   │   PLANNED   │
+│  Module 1  │ Database Foundation         │  COMPLETE   │
+│  Module 2  │ Users                       │  COMPLETE   │
+│  Module 3  │ Departments                 │  COMPLETE   │
+│  Module 4  │ Employees                   │    NEXT     │
 │  Module 5  │ Attendance                  │   PLANNED   │
 │  Module 6  │ Leave Types                 │   PLANNED   │
 │  Module 7  │ Leave Requests              │   PLANNED   │
@@ -61,18 +89,30 @@ The Dayflow database architecture is partitioned into 12 structured, sequential 
 └────────────┴─────────────────────────────┴─────────────┘
 ```
 
-- **Module 1: Database Initialization (COMPLETED)** — Database foundation, extensions (`uuid-ossp`, `pgcrypto`), migration & seeding architecture, and environment configuration templates.
-- **Module 2: Users (COMPLETED)** — Core authentication entity (`users` table), role designations (`SUPER_ADMIN`, `HR_ADMIN`, `MANAGER`, `EMPLOYEE`), account status flags, timestamps, and seed accounts.
-- **Module 3: Departments (NEXT)** — Department hierarchy, head-of-department assignments, and organizational units.
-- **Module 4: Employees** — Personal profiles, employment records, contact details, designations, and reporting structures.
-- **Module 5: Attendance** — Daily timesheets, clock-in/out timestamps, shift schedules, and overtime tracking.
-- **Module 6: Leave Types** — Organization leave policy configuration, quotas, carryover rules, and accrual types.
-- **Module 7: Leave Requests** — Employee leave applications, multi-level review workflows, and approval audit logs.
-- **Module 8: Payroll** — Salary structures, earnings/deductions breakdown, monthly payroll batches, and payslips.
-- **Module 9: Notifications** — System alerts, notifications, delivery channel state, and read receipts.
-- **Module 10: Documents** — Employee documentation, verification state, and policy attachment metadata.
-- **Module 11: Password Reset** — Time-bound, secure one-time verification tokens for account recovery.
-- **Module 12: Audit Logs** — Append-only, tamper-evident audit logging for all transactional events.
+### Future Module 4: Employees Entity Linkage (1:1 with Users)
+When implemented in Module 4, the `employees` table will establish the following relationships:
+
+```text
+    users (Module 2)              departments (Module 3)
+   ┌─────────────────┐           ┌────────────────────┐
+   │ id (UUID PK)    │           │ id (UUID PK)       │
+   └────────┬────────┘           └─────────┬──────────┘
+            │ 1                            │ 1
+            │                              │
+            │ 1                            │ N
+   ┌────────▼──────────────────────────────▼──────────┐
+   │ employees (Module 4 - Planned)                   │
+   │ ------------------------------------------------ │
+   │ id               UUID PRIMARY KEY                │
+   │ user_id          UUID UNIQUE NOT NULL (FK)       │
+   │ employee_code    VARCHAR(50) UNIQUE NOT NULL     │
+   │ department_id    UUID NULL (FK)                  │
+   │ first_name       VARCHAR(100) NOT NULL           │
+   │ last_name        VARCHAR(100) NOT NULL           │
+   │ designation      VARCHAR(100) NOT NULL           │
+   │ ...                                              │
+   └──────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -81,14 +121,16 @@ The Dayflow database architecture is partitioned into 12 structured, sequential 
 ```text
 database/
 ├── migrations/
-│   ├── README.md               # Migration versioning rules and roadmap
-│   └── V1__create_users.sql    # Migration V1: users table, triggers, and indexes
+│   ├── README.md                    # Migration versioning rules and roadmap
+│   ├── V1__create_users.sql         # Migration V1: users table (ADMIN, HR, EMPLOYEE)
+│   └── V2__create_departments.sql   # Migration V2: departments table, triggers, and constraints
 ├── seeds/
-│   ├── README.md               # Seed data execution dependencies and rules
-│   └── users.sql               # Seed data for demo user accounts
-├── schema.sql                  # Master schema definition & active tables
-├── seed.sql                    # Master seed orchestration script
-└── README.md                   # Master database documentation (this file)
+│   ├── README.md                    # Seed data execution dependencies and rules
+│   ├── departments.sql              # Seed data for baseline departments (IT, HR, FIN, MKT, SALES, OPS)
+│   └── users.sql                    # Seed data for demo user accounts (ADMIN, HR, EMPLOYEE)
+├── schema.sql                       # Master schema definition & active tables
+├── seed.sql                         # Master seed orchestration script (ordered)
+└── README.md                        # Master database documentation (this file)
 ```
 
 ---
@@ -179,7 +221,7 @@ DB_TIMEOUT_SECONDS=30
 ## 7. Security Best Practices
 
 1. **Zero Credential Exposure:** Never commit `.env` files, plaintext passwords, private keys, or connection strings to version control.
-2. **Password Cryptography:** User passwords must always be hashed using modern algorithms (Argon2id, bcrypt) with high work factors before insertion into the database.
+2. **Password Cryptography:** User passwords must always be hashed using modern algorithms (bcrypt/Argon2) with high work factors before insertion into the database.
 3. **Principle of Least Privilege:** Production applications should connect using an application-specific user account granted only `DML` privileges (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), rather than the `postgres` superuser.
 4. **Encrypted Transport:** Enable SSL (`DB_SSL_MODE=require` or `verify-full`) for all database connections in staging and production deployments.
 5. **SQL Injection Prevention:** All backend queries must utilize parameterized statements or prepared queries without exception.

@@ -3,10 +3,11 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Current Module: MODULE 2 — USERS
+-- Completed Modules: MODULE 1 (Foundation), MODULE 2 (Users), MODULE 3 (Departments)
+-- Next Module: MODULE 4 (Employees)
 -- ==============================================================================
 -- Description:
--- Master schema foundation file for the Dayflow HRMS PostgreSQL database.
+-- Master schema definition file for the Dayflow HRMS PostgreSQL database.
 -- Contains database-level configuration, extensions, active table schemas,
 -- and documents the planned modular schema architecture.
 -- ==============================================================================
@@ -37,6 +38,9 @@ $$ LANGUAGE plpgsql;
 
 -- ------------------------------------------------------------------------------
 -- MODULE 2: users
+-- Purpose: Authentication, credentials, role (ADMIN, HR, EMPLOYEE), and account state.
+-- Architecture Note: Decoupled from personal profiles (1:1 with Module 4 employees table).
+-- No employee_id or employee_code is stored in the users table.
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -50,7 +54,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT chk_users_role CHECK (
-        role IN ('SUPER_ADMIN', 'HR_ADMIN', 'MANAGER', 'EMPLOYEE')
+        role IN ('ADMIN', 'HR', 'EMPLOYEE')
     ),
     CONSTRAINT chk_users_status CHECK (
         status IN ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'PENDING_VERIFICATION')
@@ -68,28 +72,55 @@ BEFORE UPDATE ON users
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
+-- ------------------------------------------------------------------------------
+-- MODULE 3: departments
+-- Purpose: Organizational business units, normalized codes, and soft-deactivation.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS departments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(20) NOT NULL,
+    description TEXT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_departments_name UNIQUE (name),
+    CONSTRAINT uq_departments_code UNIQUE (code),
+    CONSTRAINT chk_departments_code_format CHECK (
+        code = UPPER(TRIM(code)) AND LENGTH(TRIM(code)) >= 2 AND code ~ '^[A-Z0-9_-]+$'
+    ),
+    CONSTRAINT chk_departments_name_not_empty CHECK (
+        LENGTH(TRIM(name)) > 0
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_departments_is_active ON departments(is_active);
+
+DROP TRIGGER IF EXISTS trg_departments_updated_at ON departments;
+CREATE TRIGGER trg_departments_updated_at
+BEFORE UPDATE ON departments
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
 -- ==============================================================================
 -- PLANNED DATABASE MODULES SPECIFICATION
 -- ==============================================================================
 --
 -- 1. MODULE: users [STATUS: IMPLEMENTED in Module 2]
+-- 2. MODULE: departments [STATUS: IMPLEMENTED in Module 3]
 --
--- 2. MODULE: departments [STATUS: NEXT - Module 3]
---    Purpose: Organizational structure and team hierarchy.
---    Scope:
---      - Department identifiers, codes, and descriptive names.
---      - Hierarchical relationships (parent/child departments).
---      - Department head assignments (linked to employees).
---      - Operational status and budget center codes.
---
--- 3. MODULE: employees [STATUS: PLANNED - Module 4]
+-- 3. MODULE: employees [STATUS: NEXT - Module 4]
 --    Purpose: Comprehensive employee profiles and employment lifecycle.
---    Scope:
---      - Primary employee identification (employee code, user reference).
---      - Personal data (first name, last name, date of birth, contact details).
---      - Employment metadata (designation, department reference, manager reference,
---        employment type: FULL_TIME, PART_TIME, CONTRACTOR, join date, exit date).
---      - Address and emergency contact records.
+--    Expected Architecture:
+--      - id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+--      - user_id UUID UNIQUE NOT NULL -> REFERENCES users(id) [1:1 relationship]
+--      - employee_code VARCHAR(...) UNIQUE NOT NULL
+--      - department_id UUID NULL -> REFERENCES departments(id)
+--      - first_name, last_name, date_of_birth, contact details, designation,
+--        employment_type (FULL_TIME, PART_TIME, CONTRACTOR), join_date, exit_date
+--      - address and emergency contact records
+--    [NOTE: NOT implemented yet; will be created in Module 4]
 --
 -- 4. MODULE: attendance [STATUS: PLANNED - Module 5]
 --    Purpose: Daily time tracking, shift management, and punctuality logging.
