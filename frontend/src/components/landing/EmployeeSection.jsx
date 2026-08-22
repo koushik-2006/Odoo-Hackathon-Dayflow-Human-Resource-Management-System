@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Check,
@@ -11,8 +11,12 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
+import BorderGlow from '../ui/BorderGlow';
+import SpecularButton from '../ui/SpecularButton';
 
 export default function EmployeeSection() {
+  const navigate = useNavigate();
+
   const benefits = [
     'View attendance history & daily hours',
     'Check real-time leave balances',
@@ -26,7 +30,7 @@ export default function EmployeeSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           
-          {/* Left Column: Realistic Employee Dashboard UI Card */}
+          {/* Left Column: Realistic Employee Dashboard UI Card wrapped in BorderGlow */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -37,57 +41,66 @@ export default function EmployeeSection() {
             {/* Subtle Gradient Glow */}
             <div className="absolute -inset-2 bg-gradient-to-r from-indigo-500/10 to-violet-500/15 rounded-3xl blur-2xl -z-10" />
 
-            <div className="bg-slate-900/80 backdrop-blur-xl p-6 sm:p-8 rounded-3xl border border-slate-800/90 shadow-2xl space-y-6">
-              
-              {/* Employee Profile Header Widget */}
-              <div className="bg-slate-950/80 p-5 rounded-2xl border border-slate-800/80 shadow-xs flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-bold text-lg flex items-center justify-center shadow-md shadow-indigo-500/20">
-                    AM
+            <BorderGlow
+              borderRadius={28}
+              backgroundColor="rgba(15, 23, 42, 0.9)"
+              glowColor="250 85 80"
+              colors={['#818cf8', '#c084fc', '#38bdf8']}
+              glowRadius={45}
+              edgeSensitivity={25}
+            >
+              <div className="p-6 sm:p-8 space-y-6">
+                
+                {/* Employee Profile Header Widget */}
+                <div className="bg-slate-950/80 p-5 rounded-2xl border border-slate-800/80 shadow-xs flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-bold text-lg flex items-center justify-center shadow-md shadow-indigo-500/20">
+                      AM
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-white">Alex Mercer</h4>
+                      <p className="text-xs text-slate-400">Senior Frontend Engineer • Tech</p>
+                    </div>
                   </div>
+                  <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                    Active
+                  </span>
+                </div>
+
+                {/* Attendance Quick Stats Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 shadow-xs">
+                    <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
+                      <span>Paid Leave</span>
+                      <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                    </div>
+                    <div className="text-2xl font-extrabold text-white mt-2">12 / 18</div>
+                    <div className="text-[11px] text-emerald-400 font-semibold mt-0.5">6 Days Available</div>
+                  </div>
+
+                  <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 shadow-xs">
+                    <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
+                      <span>Sick Leave</span>
+                      <FileText className="w-3.5 h-3.5 text-violet-400" />
+                    </div>
+                    <div className="text-2xl font-extrabold text-white mt-2">7 / 10</div>
+                    <div className="text-[11px] text-emerald-400 font-semibold mt-0.5">3 Days Available</div>
+                  </div>
+                </div>
+
+                {/* Payslip Quick View Strip */}
+                <div className="bg-indigo-950/90 border border-indigo-500/30 text-white p-4 rounded-2xl shadow-md flex items-center justify-between">
                   <div>
-                    <h4 className="text-base font-bold text-white">Alex Mercer</h4>
-                    <p className="text-xs text-slate-400">Senior Frontend Engineer • Tech</p>
+                    <div className="text-xs text-indigo-300 font-medium">Latest Payslip (August 2026)</div>
+                    <div className="text-lg font-bold text-white mt-0.5">$6,200.00</div>
                   </div>
+                  <button className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm">
+                    Download PDF
+                  </button>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
-                  Active
-                </span>
+
               </div>
-
-              {/* Attendance Quick Stats Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 shadow-xs">
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-                    <span>Paid Leave</span>
-                    <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-                  </div>
-                  <div className="text-2xl font-extrabold text-white mt-2">12 / 18</div>
-                  <div className="text-[11px] text-emerald-400 font-semibold mt-0.5">6 Days Available</div>
-                </div>
-
-                <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 shadow-xs">
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-                    <span>Sick Leave</span>
-                    <FileText className="w-3.5 h-3.5 text-violet-400" />
-                  </div>
-                  <div className="text-2xl font-extrabold text-white mt-2">7 / 10</div>
-                  <div className="text-[11px] text-emerald-400 font-semibold mt-0.5">3 Days Available</div>
-                </div>
-              </div>
-
-              {/* Payslip Quick View Strip */}
-              <div className="bg-indigo-950/90 border border-indigo-500/30 text-white p-4 rounded-2xl shadow-md flex items-center justify-between">
-                <div>
-                  <div className="text-xs text-indigo-300 font-medium">Latest Payslip (August 2026)</div>
-                  <div className="text-lg font-bold text-white mt-0.5">$6,200.00</div>
-                </div>
-                <button className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm">
-                  Download PDF
-                </button>
-              </div>
-
-            </div>
+            </BorderGlow>
           </motion.div>
 
           {/* Right Column: Text & Features */}
@@ -98,8 +111,8 @@ export default function EmployeeSection() {
             transition={{ duration: 0.7 }}
             className="lg:col-span-6 space-y-6"
           >
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold uppercase tracking-wider">
-              FOR EMPLOYEES
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-indigo-950/70 border border-indigo-500/40 text-indigo-300 text-xs sm:text-sm font-semibold tracking-wide backdrop-blur-md">
+              ✨ FOR EMPLOYEES
             </div>
 
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
@@ -124,13 +137,17 @@ export default function EmployeeSection() {
 
             {/* CTA */}
             <div className="pt-4">
-              <Link
-                to="/login"
-                className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:-translate-y-0.5"
+              <SpecularButton
+                size="lg"
+                radius={16}
+                baseColor="#4f46e5"
+                lineColor="#a5b4fc"
+                textColor="#ffffff"
+                onClick={() => navigate('/login')}
               >
                 Explore Employee Portal
                 <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
+              </SpecularButton>
             </div>
 
           </motion.div>
