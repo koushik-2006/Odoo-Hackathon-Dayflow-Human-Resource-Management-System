@@ -11,6 +11,6 @@ public interface LeaveService {
     LeaveResponse applyLeave(Long userId, LeaveRequestDto requestDto);
     List<LeaveResponse> getMyLeaveRequests(Long userId);
     List<LeaveResponse> getAllLeaveRequests();
-    LeaveResponse approveLeave(Long leaveId, ApproveLeaveRequest approveRequest);
-    LeaveResponse rejectLeave(Long leaveId, RejectLeaveRequest rejectRequest);
+    LeaveResponse approveLeave(Long leaveId, ApproveLeaveRequest approveRequest, String approverUsername);
+    LeaveResponse rejectLeave(Long leaveId, RejectLeaveRequest rejectRequest, String approverUsername);
 }

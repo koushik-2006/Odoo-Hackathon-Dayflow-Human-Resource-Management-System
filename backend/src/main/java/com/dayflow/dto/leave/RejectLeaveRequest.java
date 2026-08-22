@@ -1,6 +1,5 @@
 package com.dayflow.dto.leave;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +11,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RejectLeaveRequest {
 
-    @NotBlank(message = "Rejection comment is required")
     private String adminComment;
+    private String comment;
+
+    public String getEffectiveComment() {
+        if (comment != null && !comment.trim().isEmpty()) {
+            return comment;
+        }
+        if (adminComment != null && !adminComment.trim().isEmpty()) {
+            return adminComment;
+        }
+        return "Rejected by administrator";
+    }
 }

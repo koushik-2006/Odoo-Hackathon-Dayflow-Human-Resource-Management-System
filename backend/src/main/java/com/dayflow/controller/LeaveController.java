@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/leaves")
 @RequiredArgsConstructor
-@Tag(name = "Leave Management", description = "Endpoints for employee leave application and manager approvals")
+@Tag(name = "Leave Management", description = "Endpoints for employee leave application, history, and manager approvals")
 public class LeaveController {
 
     private final LeaveService leaveService;
@@ -37,8 +37,8 @@ public class LeaveController {
         return new ResponseEntity<>(ApiResponse.success("Leave application submitted successfully", response), HttpStatus.CREATED);
     }
 
-    @GetMapping("/my-requests")
-    @Operation(summary = "Get employee's personal leave requests")
+    @GetMapping({"/my", "/my-requests"})
+    @Operation(summary = "Get employee's personal leave history (Pending, Approved, Rejected)")
     public ResponseEntity<ApiResponse<List<LeaveResponse>>> getMyLeaveRequests(@AuthenticationPrincipal CustomUserDetails userDetails) {
         List<LeaveResponse> requests = leaveService.getMyLeaveRequests(userDetails.getId());
         return ResponseEntity.ok(ApiResponse.success(requests));
@@ -54,12 +54,14 @@ public class LeaveController {
 
     @PutMapping("/{id}/approve")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
-    @Operation(summary = "Approve leave request (Admin/HR only)")
+    @Operation(summary = "Approve leave request (Admin/HR only, auto-creates Attendance records)")
     public ResponseEntity<ApiResponse<LeaveResponse>> approveLeave(
             @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody(required = false) ApproveLeaveRequest approveRequest
     ) {
-        LeaveResponse response = leaveService.approveLeave(id, approveRequest);
+        String approver = userDetails != null ? userDetails.getUsername() : "ADMIN";
+        LeaveResponse response = leaveService.approveLeave(id, approveRequest, approver);
         return ResponseEntity.ok(ApiResponse.success("Leave request approved successfully", response));
     }
 
@@ -68,9 +70,11 @@ public class LeaveController {
     @Operation(summary = "Reject leave request (Admin/HR only)")
     public ResponseEntity<ApiResponse<LeaveResponse>> rejectLeave(
             @PathVariable Long id,
-            @Valid @RequestBody RejectLeaveRequest rejectRequest
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody(required = false) RejectLeaveRequest rejectRequest
     ) {
-        LeaveResponse response = leaveService.rejectLeave(id, rejectRequest);
-        return ResponseEntity.ok(ApiResponse.success("Leave request rejected", response));
+        String approver = userDetails != null ? userDetails.getUsername() : "ADMIN";
+        LeaveResponse response = leaveService.rejectLeave(id, rejectRequest, approver);
+        return ResponseEntity.ok(ApiResponse.success("Leave request rejected successfully", response));
     }
 }
