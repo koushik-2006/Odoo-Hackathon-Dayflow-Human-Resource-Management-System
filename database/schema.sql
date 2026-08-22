@@ -3,8 +3,8 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Current Module: MODULE 6 — LEAVE TYPES (COMPLETED)
--- Next Module: MODULE 7 — LEAVE REQUESTS
+-- Current Module: MODULE 7 — LEAVE REQUESTS (COMPLETED)
+-- Next Module: MODULE 8 — PAYROLL
 -- ==============================================================================
 -- Description:
 -- Master schema definition file for the Dayflow HRMS PostgreSQL database.
@@ -249,6 +249,60 @@ BEFORE UPDATE ON leave_types
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
+-- ------------------------------------------------------------------------------
+-- MODULE 7: leave_requests
+-- Purpose: Employee leave applications, workflow statuses, and approval logs.
+-- Relationships:
+--   - employees (N : 1): leave_requests.employee_id -> employees.id (NOT NULL, RESTRICT)
+--   - leave_types (N : 1): leave_requests.leave_type_id -> leave_types.id (NOT NULL, RESTRICT)
+--   - users (N : 1): leave_requests.reviewer_id -> users.id (NULLABLE, SET NULL)
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS leave_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    employee_id UUID NOT NULL,
+    leave_type_id UUID NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    reason TEXT NOT NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+    reviewer_id UUID NULL,
+    reviewer_comment TEXT NULL,
+    reviewed_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_leave_requests_employee FOREIGN KEY (employee_id)
+        REFERENCES employees (id)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_leave_requests_leave_type FOREIGN KEY (leave_type_id)
+        REFERENCES leave_types (id)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_leave_requests_reviewer FOREIGN KEY (reviewer_id)
+        REFERENCES users (id)
+        ON DELETE SET NULL,
+    CONSTRAINT chk_leave_requests_date_range CHECK (
+        end_date >= start_date
+    ),
+    CONSTRAINT chk_leave_requests_reason CHECK (
+        LENGTH(TRIM(reason)) > 0
+    ),
+    CONSTRAINT chk_leave_requests_status CHECK (
+        status IN ('PENDING', 'APPROVED', 'REJECTED')
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_leave_requests_employee_id ON leave_requests(employee_id);
+CREATE INDEX IF NOT EXISTS idx_leave_requests_leave_type_id ON leave_requests(leave_type_id);
+CREATE INDEX IF NOT EXISTS idx_leave_requests_status ON leave_requests(status);
+CREATE INDEX IF NOT EXISTS idx_leave_requests_start_date ON leave_requests(start_date DESC);
+CREATE INDEX IF NOT EXISTS idx_leave_requests_employee_status ON leave_requests(employee_id, status);
+
+DROP TRIGGER IF EXISTS trg_leave_requests_updated_at ON leave_requests;
+CREATE TRIGGER trg_leave_requests_updated_at
+BEFORE UPDATE ON leave_requests
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
 -- ==============================================================================
 -- PLANNED DATABASE MODULES SPECIFICATION
 -- ==============================================================================
@@ -258,33 +312,22 @@ EXECUTE FUNCTION update_updated_at_column();
 -- 3. MODULE: employees [STATUS: IMPLEMENTED in Module 4]
 -- 4. MODULE: attendance [STATUS: IMPLEMENTED in Module 5]
 -- 5. MODULE: leave_types [STATUS: IMPLEMENTED in Module 6]
+-- 6. MODULE: leave_requests [STATUS: IMPLEMENTED in Module 7]
 --
--- 6. MODULE: leave_requests [STATUS: NEXT - Module 7]
---    Purpose: Leave application lifecycle, approval workflows, and date ranges.
---    Expected Architecture:
---      - id UUID PRIMARY KEY DEFAULT gen_random_uuid()
---      - employee_id UUID NOT NULL -> REFERENCES employees(id)
---      - leave_type_id UUID NOT NULL -> REFERENCES leave_types(id)
---      - start_date DATE NOT NULL, end_date DATE NOT NULL
---      - reason TEXT, status (PENDING, APPROVED, REJECTED, CANCELLED)
---      - approver_id UUID NULL -> REFERENCES employees(id)
---    [NOTE: NOT implemented yet; will be created in Module 7]
---
--- 7. MODULE: payroll [STATUS: PLANNED - Module 8]
---    Purpose: Compensation structures, recurring salary processing, and payslip generation.
+-- 7. MODULE: payroll [STATUS: NEXT - Module 8]
+--    Purpose: Employee salary structure, periodic pay runs, allowances, and deductions.
 --    Scope:
---      - Salary structure definitions (base salary, fixed allowances, tax deductions).
---      - Monthly pay run batches and processing states (DRAFT, CALCULATED, APPROVED, DISBURSED).
---      - Itemized payslip records (gross earnings, statutory deductions, net payable).
---      - Bank account details and payment disbursement references.
+--      - Salary components: Basic pay, HRA, Transport, Medical, Special allowances.
+--      - Statutory and custom deductions: Income Tax / TDS, PF, insurance.
+--      - Pay period start/end dates, gross pay, net pay, and currency.
+--      - Pay slip generation metadata and payment execution statuses.
 --
 -- 8. MODULE: notifications [STATUS: PLANNED - Module 9]
---    Purpose: System alerts, notifications, and event broadcasts.
+--    Purpose: In-app user notifications and workflow event alerts.
 --    Scope:
---      - Targeted recipient user/employee IDs.
---      - Notification categories (SYSTEM, LEAVE, ATTENDANCE, PAYROLL, ANNOUNCEMENT).
---      - Delivery channel statuses (IN_APP, EMAIL, SMS, PUSH) and read/unread flags.
---      - Actionable deep-links and rich message payload content.
+--      - Notification delivery payload (type, title, message, link).
+--      - Read status tracking (is_read, read_at).
+--      - Recipient user linkage (users.id) and category filtering.
 --
 -- 9. MODULE: documents [STATUS: PLANNED - Module 10]
 --    Purpose: Centralized employee document repository and HR policy files.
