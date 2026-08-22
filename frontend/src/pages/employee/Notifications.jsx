@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Bell, Check, Info, AlertTriangle, ShieldCheck } from 'lucide-react';
-import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
-import Button from '../../components/ui/Button';
+import BorderGlow from '../../components/ui/BorderGlow';
+import SpecularButton from '../../components/ui/SpecularButton';
 import { useToast } from '../../context/ToastContext';
 
 export default function Notifications() {
@@ -19,42 +19,56 @@ export default function Notifications() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 animate-fade-in max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-100 tracking-tight">Notifications</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
+            <Bell className="w-7 h-7 text-indigo-400" />
+            Notifications
+          </h1>
           <p className="text-xs text-slate-400">Stay updated on approvals, payslips, and workplace updates</p>
         </div>
-        <Button onClick={markAllRead} variant="outline" size="sm" icon={Check}>
+        <SpecularButton
+          size="sm"
+          radius={12}
+          baseColor="#1e293b"
+          lineColor="#64748b"
+          textColor="#f8fafc"
+          onClick={markAllRead}
+        >
+          <Check className="w-3.5 h-3.5 mr-1 text-indigo-400" />
           Mark All Read
-        </Button>
+        </SpecularButton>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {items.map((item) => (
-          <Card
+          <BorderGlow
             key={item.id}
-            glass
-            className={`p-4 transition-all border ${
-              item.unread ? 'border-indigo-500/40 bg-indigo-500/5' : 'border-slate-800'
-            }`}
+            borderRadius={20}
+            backgroundColor="rgba(15, 23, 42, 0.9)"
+            glowColor={item.unread ? "250 85 80" : "210 30 50"}
+            colors={item.unread ? ['#818cf8', '#c084fc', '#38bdf8'] : ['#475569', '#334155', '#1e293b']}
+            glowRadius={30}
+            edgeSensitivity={20}
+            className="w-full shadow-xl"
           >
-            <div className="flex items-start gap-4">
+            <div className="p-4 sm:p-5 flex items-start gap-4">
               <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shrink-0">
                 <Bell className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <h4 className="text-sm font-bold text-slate-100">{item.title}</h4>
-                  <span className="text-[11px] text-slate-500">{item.time}</span>
+                  <h4 className="text-sm font-bold text-white">{item.title}</h4>
+                  <span className="text-[11px] text-slate-400 font-medium">{item.time}</span>
                 </div>
                 <p className="text-xs text-slate-300 mt-1 leading-relaxed">{item.text}</p>
               </div>
               {item.unread && (
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0 self-center" />
+                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0 self-center animate-pulse" />
               )}
             </div>
-          </Card>
+          </BorderGlow>
         ))}
       </div>
     </div>
