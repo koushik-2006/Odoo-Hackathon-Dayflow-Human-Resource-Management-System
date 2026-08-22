@@ -3,8 +3,8 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Current Module: MODULE 9 — NOTIFICATIONS (COMPLETED)
--- Next Module: MODULE 10 — DOCUMENTS
+-- Current Module: MODULE 10 — DOCUMENTS (COMPLETED)
+-- Next Module: MODULE 11 — AUDIT LOGS
 -- ==============================================================================
 -- Description:
 -- Master schema definition file for the Dayflow HRMS PostgreSQL database.
@@ -433,6 +433,93 @@ BEFORE UPDATE ON notifications
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
+-- ------------------------------------------------------------------------------
+-- MODULE 10: documents
+-- Purpose: Employee document metadata, file storage locations, and verification review.
+-- Relationships:
+--   - employees (N : 1): documents.employee_id -> employees.id (NOT NULL, CASCADE)
+--   - users (N : 1): documents.uploaded_by -> users.id (NOT NULL, RESTRICT)
+--   - users (N : 1): documents.verified_by -> users.id (NULLABLE, SET NULL)
+-- Architecture Note:
+--   - Stores file metadata and storage URLs only. Actual binary payloads are stored
+--     in external object storage (S3/Cloudinary/Local disk) and not in PostgreSQL.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS documents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    employee_id UUID NOT NULL,
+    document_type VARCHAR(50) NOT NULL,
+    document_name VARCHAR(200) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_url TEXT NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    file_size BIGINT NOT NULL,
+    description TEXT NULL,
+    verification_status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+    uploaded_by UUID NOT NULL,
+    verified_by UUID NULL,
+    verified_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_documents_employee FOREIGN KEY (employee_id)
+        REFERENCES employees (id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_documents_uploaded_by FOREIGN KEY (uploaded_by)
+        REFERENCES users (id)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_documents_verified_by FOREIGN KEY (verified_by)
+        REFERENCES users (id)
+        ON DELETE SET NULL,
+    CONSTRAINT chk_documents_type CHECK (
+        document_type IN (
+            'ID_PROOF',
+            'ADDRESS_PROOF',
+            'OFFER_LETTER',
+            'EMPLOYMENT_CONTRACT',
+            'RESUME',
+            'EDUCATION_CERTIFICATE',
+            'EXPERIENCE_CERTIFICATE',
+            'SALARY_SLIP',
+            'OTHER'
+        )
+    ),
+    CONSTRAINT chk_documents_verification_status CHECK (
+        verification_status IN (
+            'PENDING',
+            'VERIFIED',
+            'REJECTED'
+        )
+    ),
+    CONSTRAINT chk_documents_document_name CHECK (
+        LENGTH(TRIM(document_name)) > 0
+    ),
+    CONSTRAINT chk_documents_file_name CHECK (
+        LENGTH(TRIM(file_name)) > 0
+    ),
+    CONSTRAINT chk_documents_file_url CHECK (
+        LENGTH(TRIM(file_url)) > 0
+    ),
+    CONSTRAINT chk_documents_mime_type CHECK (
+        LENGTH(TRIM(mime_type)) > 0
+    ),
+    CONSTRAINT chk_documents_file_size CHECK (
+        file_size > 0
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_documents_employee_id ON documents(employee_id);
+CREATE INDEX IF NOT EXISTS idx_documents_document_type ON documents(document_type);
+CREATE INDEX IF NOT EXISTS idx_documents_verification_status ON documents(verification_status);
+CREATE INDEX IF NOT EXISTS idx_documents_uploaded_by ON documents(uploaded_by);
+CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_documents_employee_status ON documents(employee_id, verification_status);
+
+DROP TRIGGER IF EXISTS trg_documents_updated_at ON documents;
+CREATE TRIGGER trg_documents_updated_at
+BEFORE UPDATE ON documents
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
 -- ==============================================================================
 -- PLANNED DATABASE MODULES SPECIFICATION
 -- ==============================================================================
@@ -445,16 +532,9 @@ EXECUTE FUNCTION update_updated_at_column();
 -- 6. MODULE: leave_requests [STATUS: IMPLEMENTED in Module 7]
 -- 7. MODULE: payroll [STATUS: IMPLEMENTED in Module 8]
 -- 8. MODULE: notifications [STATUS: IMPLEMENTED in Module 9]
+-- 9. MODULE: documents [STATUS: IMPLEMENTED in Module 10]
 --
--- 9. MODULE: documents [STATUS: NEXT - Module 10]
---    Purpose: Centralized employee document repository and HR policy files.
---    Scope:
---      - Document metadata (title, category: ID_PROOF, CONTRACT, CERTIFICATION, POLICY).
---      - Secure storage references / object storage URLs.
---      - Verification status (PENDING_VERIFICATION, VERIFIED, REJECTED).
---      - Access control tags and expiration tracking.
---
--- 10. MODULE: audit_logs [STATUS: PLANNED - Module 11]
+-- 10. MODULE: audit_logs [STATUS: NEXT - Module 11]
 --     Purpose: Comprehensive compliance, security, and activity tracking.
 --     Scope:
 --       - Actor tracking (user ID, session ID, client IP address, user agent).

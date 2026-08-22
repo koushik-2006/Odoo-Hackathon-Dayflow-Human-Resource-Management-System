@@ -2,8 +2,8 @@
 
 > **Project Name:** Dayflow - Human Resource Management System  
 > **Tagline:** *Every workday, perfectly aligned.*  
-> **Current Status:** Modules 1, 2, 3, 4, 5, 6, 7, 8, 9 (COMPLETE)  
-> **Next Module:** Module 10 — Documents (NEXT)  
+> **Current Status:** Modules 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 (COMPLETE)  
+> **Next Module:** Module 11 — Audit Logs (NEXT)  
 > **Database Engine:** PostgreSQL (Version 14+)  
 > **Database Name:** `dayflow`  
 > **Default Host:** `localhost`  
@@ -23,7 +23,7 @@ The **Dayflow HRMS** PostgreSQL database serves as the centralized, reliable, an
 - **Leave Requests & Approval Lifecycle (Module 7):** Employee leave applications, date-range validation, multi-tier approval workflows (`PENDING`, `APPROVED`, `REJECTED`), reviewer tracking, and audit history.
 - **Payroll & Compensation (Module 8):** Multi-component salary structures (basic, HRA, conveyance, other allowances), statutory/custom deductions (tax, PF), gross/net pay calculation, pay cycle periods, and payment tracking.
 - **In-App Notifications & Alerts (Module 9):** Targeted user notifications, read/unread states, event classifiers (`LEAVE_APPLIED`, `LEAVE_APPROVED`, `LEAVE_REJECTED`, `ATTENDANCE_REMINDER`, `ATTENDANCE_ALERT`, `PAYROLL_PROCESSED`, `PAYROLL_PAID`, `GENERAL`), and polymorphic application referencing.
-- **Document Management (Module 10):** Employee records, identity proofs, contract lifecycle, and HR policy file tracking.
+- **Document Management & Verification (Module 10):** Centralized employee document repository metadata, file paths / object storage URLs, MIME validation, file sizes, and administrative verification workflows (`PENDING`, `VERIFIED`, `REJECTED`).
 - **Compliance & Audit Logging (Module 11 & 12):** Password recovery token security and immutable audit trails.
 
 ---
@@ -180,7 +180,29 @@ The `notifications` table stores targeted user notifications, unread badges, and
   - `read_at`: `TIMESTAMPTZ NULL`
   - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
   - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
-- **Architecture Note:** Notifications decouple delivery channel logic (email/SMS) into the backend service while providing a high-performance in-app persistence layer.
+
+---
+
+### Module 10: Documents (Employee Document Management & Verification)
+The `documents` table stores employee document metadata, storage paths / cloud URLs, MIME validation types, and verification review workflows.
+
+- **Columns:**
+  - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `employee_id`: `UUID NOT NULL` (N:1 with `employees.id` on delete `CASCADE`)
+  - `document_type`: `VARCHAR(50) NOT NULL` (`ID_PROOF`, `ADDRESS_PROOF`, `OFFER_LETTER`, `EMPLOYMENT_CONTRACT`, `RESUME`, `EDUCATION_CERTIFICATE`, `EXPERIENCE_CERTIFICATE`, `SALARY_SLIP`, `OTHER`)
+  - `document_name`: `VARCHAR(200) NOT NULL`
+  - `file_name`: `VARCHAR(255) NOT NULL`
+  - `file_url`: `TEXT NOT NULL` (Local path or cloud bucket URL)
+  - `mime_type`: `VARCHAR(100) NOT NULL`
+  - `file_size`: `BIGINT NOT NULL` (Byte length $> 0$)
+  - `description`: `TEXT NULL`
+  - `verification_status`: `VARCHAR(30) NOT NULL DEFAULT 'PENDING'` (`PENDING`, `VERIFIED`, `REJECTED`)
+  - `uploaded_by`: `UUID NOT NULL` (N:1 with `users.id` on delete `RESTRICT`)
+  - `verified_by`: `UUID NULL` (N:1 with `users.id` on delete `SET NULL`)
+  - `verified_at`: `TIMESTAMPTZ NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Architecture Note:** Physical binaries are persisted externally in local filesystem or object storage (e.g. AWS S3, Cloudinary). PostgreSQL stores only metadata and storage references.
 
 ---
 
@@ -199,13 +221,13 @@ The `notifications` table stores targeted user notifications, unread badges, and
 │  Module 7  │ Leave Requests              │  COMPLETE   │
 │  Module 8  │ Payroll                     │  COMPLETE   │
 │  Module 9  │ Notifications               │  COMPLETE   │
-│  Module 10 │ Documents                   │    NEXT     │
-│  Module 11 │ Password Reset              │   PLANNED   │
-│  Module 12 │ Audit Logs                  │   PLANNED   │
+│  Module 10 │ Documents                   │  COMPLETE   │
+│  Module 11 │ Audit Logs                  │    NEXT     │
+│  Module 12 │ Password Reset              │   PLANNED   │
 └────────────┴─────────────────────────────┴─────────────┘
 ```
 
-### Entity Relationship Diagram (Modules 2–9)
+### Entity Relationship Diagram (Modules 2–10)
 
 ```text
     users (Module 2)              departments (Module 3)
@@ -226,28 +248,29 @@ The `notifications` table stores targeted user notifications, unread badges, and
    │ user_id UUID FK │ │ department_id UUID NULL FK   │
    │ type    VARCHAR │ │ employee_code VARCHAR UNIQUE │
    │ is_read BOOLEAN │ │ first_name   VARCHAR         │
-   │ ref_type, ref_id│ └───────┬──────────────┬───────┘
-   └─────────────────┘         │ 1            │ 1
-                               │              │
-                               │ N            │ N
-                      ┌────────▼─────────┐ ┌──▼──────────┐
-                      │ attendance (M5)  │ │ leave_req   │
-                      │ ---------------- │ │ (Module 7)  │
-                      │ id       UUID PK │ │ ----------- │
-                      │ employee_id  FK  │ │ id  UUID PK │
-                      │ attendance_date  │ │ employee_id │
-                      │ status           │ │ leave_type  │
-                      │ UNIQUE(emp, date)│ │ status      │
-                      └──────────────────┘ └─────────────┘
-                                                      │
-                                           ┌──────────▼──────────┐
-                                           │ payroll (Module 8)  │
-                                           │ ------------------- │
-                                           │ id       UUID PK    │
-                                           │ employee_id  FK     │
-                                           │ net_salary NUMERIC  │
-                                           │ status   VARCHAR(30)│
-                                           └─────────────────────┘
+   └─────────────────┘ └───────┬──────┬───────┬───────┘
+                               │ 1    │ 1     │ 1
+                               │      │       │
+                               │ N    │ N     │ N
+                      ┌────────▼─┐ ┌──▼────┐ ┌▼──────────────┐
+                      │attendance│ │leave  │ │ documents     │
+                      │(Module 5)│ │request│ │ (Module 10)   │
+                      │          │ │(M7)   │ │ ------------- │
+                      │          │ │       │ │ id    UUID PK │
+                      │          │ │       │ │ employee_id FK│
+                      │          │ │       │ │ doc_type      │
+                      │          │ │       │ │ file_url      │
+                      │          │ │       │ │ ver_status    │
+                      └──────────┘ └───────┘ └───────────────┘
+                                      │
+                                   ┌──▼──────────────┐
+                                   │ payroll (Mod 8) │
+                                   │ --------------- │
+                                   │ id      UUID PK │
+                                   │ employee_id  FK │
+                                   │ net_salary      │
+                                   │ status          │
+                                   └─────────────────┘
 ```
 
 ---
@@ -265,7 +288,8 @@ database/
 │   ├── V5__create_leave_types.sql   # Migration V5: leave_types master policy table
 │   ├── V6__create_leave_requests.sql# Migration V6: leave_requests employee applications
 │   ├── V7__create_payroll.sql       # Migration V7: payroll employee compensation table
-│   └── V8__create_notifications.sql # Migration V8: notifications user alerts table
+│   ├── V8__create_notifications.sql # Migration V8: notifications user alerts table
+│   └── V9__create_documents.sql     # Migration V9: documents employee metadata table
 ├── seeds/
 │   ├── README.md                    # Seed data execution dependencies and rules
 │   ├── departments.sql              # Seed data for baseline departments (IT, HR, FIN, MKT, SALES, OPS)
@@ -275,7 +299,8 @@ database/
 │   ├── leave_types.sql              # Seed data for baseline leave categories (PAID, SICK, UNPAID)
 │   ├── leave_requests.sql           # Seed data for demo leave requests (PENDING, APPROVED, REJECTED)
 │   ├── payroll.sql                  # Seed data for multi-period employee payroll records
-│   └── notifications.sql            # Seed data for demo in-app alerts and notifications
+│   ├── notifications.sql            # Seed data for demo in-app alerts and notifications
+│   └── documents.sql                # Seed data for demo employee document metadata
 ├── schema.sql                       # Master schema definition & active tables
 ├── seed.sql                         # Master seed orchestration script (strict dependency order)
 └── README.md                        # Master database documentation (this file)
@@ -370,7 +395,7 @@ DB_TIMEOUT_SECONDS=30
 
 1. **Zero Credential Exposure:** Never commit `.env` files, plaintext passwords, private keys, or connection strings to version control.
 2. **Password Cryptography:** User passwords must always be hashed using modern algorithms (bcrypt/Argon2) with high work factors before insertion into the database.
-3. **Decoupled Architecture:** Authentication credentials remain strictly isolated in the `users` table. Employee profiles, attendance logs, leave records, payroll data, and notifications hold operational metadata without credential columns.
+3. **Decoupled Architecture:** Authentication credentials remain strictly isolated in the `users` table. Employee profiles, attendance logs, leave records, payroll data, notifications, and documents hold operational metadata without credential columns.
 4. **Principle of Least Privilege:** Production applications should connect using an application-specific user account granted only `DML` privileges (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), rather than the `postgres` superuser.
 5. **Encrypted Transport:** Enable SSL (`DB_SSL_MODE=require` or `verify-full`) for all database connections in staging and production deployments.
 6. **SQL Injection Prevention:** All backend queries must utilize parameterized statements or prepared queries without exception.

@@ -3,7 +3,7 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Current Module: MODULE 9 — NOTIFICATIONS
+-- Current Module: MODULE 10 — DOCUMENTS
 -- ==============================================================================
 -- Description:
 -- Master seed file for the Dayflow HRMS PostgreSQL database.
@@ -36,3 +36,6 @@
 
 -- 8. User in-app alerts, broadcast notices, and event indicators (Module 9)
 \ir seeds/notifications.sql
+
+-- 9. Employee document metadata and verification records (Module 10)
+\ir seeds/documents.sql
