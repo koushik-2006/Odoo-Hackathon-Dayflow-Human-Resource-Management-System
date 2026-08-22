@@ -19,7 +19,12 @@ export default function Employees() {
     async function fetchEmployees() {
       try {
         setLoading(true);
-        const data = await adminApi.getEmployees();
+        const data = await adminApi.getEmployees({
+          search: searchQuery,
+          department: selectedDept,
+          role: selectedRole,
+          status: selectedStatus
+        });
         setEmployees(data);
       } catch (err) {
         setError('Failed to load employee list.');
@@ -29,7 +34,7 @@ export default function Employees() {
       }
     }
     fetchEmployees();
-  }, []);
+  }, [searchQuery, selectedDept, selectedRole, selectedStatus]);
 
   const getStatusBadgeClass = (status) => {
     switch (status) {

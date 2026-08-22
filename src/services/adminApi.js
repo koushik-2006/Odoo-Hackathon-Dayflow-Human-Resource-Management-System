@@ -31,9 +31,24 @@ export const adminApi = {
   },
 
   // Employees
-  getEmployees: async () => {
-    await delay(400);
-    return [...dummyEmployees];
+  getEmployees: async (filters = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (filters.search) queryParams.append('search', filters.search);
+      if (filters.department) queryParams.append('department', filters.department);
+      if (filters.role) queryParams.append('role', filters.role);
+      if (filters.status) queryParams.append('status', filters.status);
+      
+      const res = await fetch(`http://localhost:5000/api/admin/employees?${queryParams.toString()}`);
+      const data = await res.json();
+      if (data.success) {
+        return data.employees;
+      }
+      return [];
+    } catch (err) {
+      console.error('Error fetching employees from backend, falling back to dummyData', err);
+      return [...dummyEmployees];
+    }
   },
   getEmployee: async (id) => {
     await delay(300);
