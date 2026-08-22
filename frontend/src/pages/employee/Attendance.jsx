@@ -75,6 +75,7 @@ export default function Attendance() {
   // History state
   const [attendanceLogs, setAttendanceLogs] = useState(MOCK_ATTENDANCE_LOGS);
   const [timeFilter, setTimeFilter] = useState('Daily'); // 'Daily' | 'Weekly' | 'Monthly'
+  const [statusFilter, setStatusFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Calendar State
