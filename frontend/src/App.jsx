@@ -1,3 +1,4 @@
+/** Modules 5, 6, 7 — Complete Employee Experience */
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Dashboard from './pages/employee/Dashboard';
