@@ -26,7 +26,7 @@ import EmployeeLeave from './pages/employee/Leave';
 import EmployeePayroll from './pages/employee/Payroll';
 import EmployeeNotifications from './pages/employee/Notifications';
 
-// Admin Pages
+// Admin & HR Pages
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminEmployees from './pages/admin/Employees';
 import EmployeeDetails from './pages/admin/EmployeeDetails';
@@ -40,8 +40,11 @@ function RootRedirect() {
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  if (role === 'admin' || role === 'hr') {
+  if (role === 'admin') {
     return <Navigate to="/admin/dashboard" replace />;
+  }
+  if (role === 'hr') {
+    return <Navigate to="/hr/dashboard" replace />;
   }
   return <Navigate to="/employee/dashboard" replace />;
 }
@@ -62,7 +65,7 @@ export default function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
             </Route>
 
-            {/* Protected Employee Workspace Routes */}
+            {/* Protected Employee Workspace Routes (/employee/*) */}
             <Route element={<ProtectedRoute />}>
               <Route element={<EmployeeRoute />}>
                 <Route element={<EmployeeLayout />}>
@@ -76,7 +79,7 @@ export default function App() {
               </Route>
             </Route>
 
-            {/* Protected Admin Workspace Routes */}
+            {/* Protected Admin Workspace Routes (/admin/*) */}
             <Route element={<ProtectedRoute />}>
               <Route element={<AdminRoute />}>
                 <Route element={<AdminLayout />}>
@@ -87,6 +90,21 @@ export default function App() {
                   <Route path="/admin/leave-requests" element={<LeaveRequests />} />
                   <Route path="/admin/payroll" element={<AdminPayroll />} />
                   <Route path="/admin/notifications" element={<AdminNotifications />} />
+                </Route>
+              </Route>
+            </Route>
+
+            {/* Protected HR Workspace Routes (/hr/*) */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AdminRoute />}>
+                <Route element={<AdminLayout />}>
+                  <Route path="/hr/dashboard" element={<AdminDashboard />} />
+                  <Route path="/hr/employees" element={<AdminEmployees />} />
+                  <Route path="/hr/employee/:id" element={<EmployeeDetails />} />
+                  <Route path="/hr/attendance" element={<AdminAttendance />} />
+                  <Route path="/hr/leave-requests" element={<LeaveRequests />} />
+                  <Route path="/hr/payroll" element={<AdminPayroll />} />
+                  <Route path="/hr/notifications" element={<AdminNotifications />} />
                 </Route>
               </Route>
             </Route>

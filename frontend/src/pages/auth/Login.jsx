@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, LogIn, ShieldAlert, Sparkles } from 'lucide-react';
+import { Mail, Lock, LogIn, ShieldAlert, Sparkles, UserCheck, ShieldCheck, UserCog } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import Button from '../../components/ui/Button';
@@ -61,8 +61,10 @@ export default function Login() {
     if (result.success) {
       addToast(`Welcome back, ${result.user.name}!`, 'success');
       const userRole = result.user.role || formData.role;
-      if (userRole === 'admin' || userRole === 'hr') {
+      if (userRole === 'admin') {
         navigate('/admin/dashboard');
+      } else if (userRole === 'hr') {
+        navigate('/hr/dashboard');
       } else {
         navigate('/employee/dashboard');
       }
@@ -73,9 +75,14 @@ export default function Login() {
   };
 
   const handleQuickDemo = (roleType) => {
-    const demoCredentials = roleType === 'admin' 
-      ? { email: 'admin@dayflow.com', password: 'password123', role: 'admin' }
-      : { email: 'alex@dayflow.com', password: 'password123', role: 'employee' };
+    let demoCredentials;
+    if (roleType === 'admin') {
+      demoCredentials = { email: 'admin@dayflow.com', password: 'password123', role: 'admin' };
+    } else if (roleType === 'hr') {
+      demoCredentials = { email: 'hr@dayflow.com', password: 'password123', role: 'hr' };
+    } else {
+      demoCredentials = { email: 'alex@dayflow.com', password: 'password123', role: 'employee' };
+    }
     
     setFormData(demoCredentials);
     setErrors({});
@@ -89,38 +96,51 @@ export default function Login() {
           Sign In to Dayflow
         </CardTitle>
         <CardDescription>
-          Enter your credentials to access your workplace account
+          Enter your credentials to access your workplace portal
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">
         {/* Quick Demo Selector */}
-        <div className="p-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 text-center space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-300 flex items-center justify-center gap-1">
+        <div className="p-3.5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 text-center space-y-2.5">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-300 flex items-center justify-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" /> Instant Test Login Presets
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => handleQuickDemo('employee')}
-              className={`py-1.5 px-3 rounded-xl text-xs font-semibold transition-all border ${
+              className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold transition-all border flex items-center justify-center gap-1 ${
                 formData.role === 'employee'
                   ? 'bg-indigo-600 text-white border-indigo-400'
                   : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
               }`}
             >
-              Employee View
+              <UserCheck className="w-3 h-3" /> Employee
             </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickDemo('hr')}
+              className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold transition-all border flex items-center justify-center gap-1 ${
+                formData.role === 'hr'
+                  ? 'bg-teal-600 text-white border-teal-400'
+                  : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
+              }`}
+            >
+              <UserCog className="w-3 h-3" /> HR Manager
+            </button>
+
             <button
               type="button"
               onClick={() => handleQuickDemo('admin')}
-              className={`py-1.5 px-3 rounded-xl text-xs font-semibold transition-all border ${
+              className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold transition-all border flex items-center justify-center gap-1 ${
                 formData.role === 'admin'
                   ? 'bg-purple-600 text-white border-purple-400'
                   : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
               }`}
             >
-              Admin View
+              <ShieldCheck className="w-3 h-3" /> Admin
             </button>
           </div>
         </div>
@@ -162,7 +182,7 @@ export default function Login() {
                 className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500"
                 defaultChecked
               />
-              <span>Remember this device</span>
+              <span>Remember device</span>
             </label>
             <Link
               to="/forgot-password"
@@ -180,7 +200,7 @@ export default function Login() {
             className="w-full mt-2"
             icon={LogIn}
           >
-            Sign In to Account
+            Sign In to Portal
           </Button>
         </form>
 

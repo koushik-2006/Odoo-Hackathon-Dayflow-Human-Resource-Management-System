@@ -1,6 +1,6 @@
 import api from './api';
 
-// Mock users for local test drive / fallback
+// Pre-configured mock users for instant test drive & offline demo
 const MOCK_USERS = {
   admin: {
     id: 'ADM-001',
@@ -8,9 +8,19 @@ const MOCK_USERS = {
     name: 'Sarah Connor (Admin)',
     email: 'admin@dayflow.com',
     role: 'admin',
-    designation: 'HR Director & System Admin',
+    designation: 'System Administrator & HR Director',
     department: 'Human Resources',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+  },
+  hr: {
+    id: 'HR-003',
+    employeeId: 'EMP-3012',
+    name: 'Jessica Vance (HR)',
+    email: 'hr@dayflow.com',
+    role: 'hr',
+    designation: 'HR Senior Manager',
+    department: 'Human Resources',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
   },
   employee: {
     id: 'EMP-002',
@@ -31,52 +41,47 @@ const MOCK_USERS = {
     allowances: 700,
     netSalary: 9000,
   },
-  hr: {
-    id: 'HR-003',
-    employeeId: 'EMP-3012',
-    name: 'Jessica Vance',
-    email: 'hr@dayflow.com',
-    role: 'hr',
-    designation: 'HR Manager',
-    department: 'Human Resources',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-  },
 };
 
 export const authService = {
+  // Login API integration (POST /api/auth/login)
   async login(credentials) {
     try {
       const response = await api.post('/auth/login', credentials);
       return response.data;
     } catch (err) {
-      // Fallback for offline demo mode
-      console.warn('API connection failed. Using fallback mock authentication.');
-      const role = credentials.role || (credentials.email?.includes('admin') ? 'admin' : 'employee');
-      const user = MOCK_USERS[role] || {
+      console.warn('API connection offline. Utilizing mock authentication fallback.');
+      
+      const requestedRole = credentials.role || 
+        (credentials.email?.includes('admin') ? 'admin' : credentials.email?.includes('hr') ? 'hr' : 'employee');
+      
+      const user = MOCK_USERS[requestedRole] || {
         id: 'EMP-' + Math.floor(1000 + Math.random() * 9000),
         employeeId: credentials.employeeId || 'EMP-7788',
         name: credentials.email ? credentials.email.split('@')[0] : 'Demo User',
         email: credentials.email || 'user@dayflow.com',
-        role: role,
-        designation: role === 'admin' ? 'Administrator' : 'Software Engineer',
-        department: 'Technology',
+        role: requestedRole,
+        designation: requestedRole === 'admin' ? 'Administrator' : requestedRole === 'hr' ? 'HR Specialist' : 'Software Engineer',
+        department: requestedRole === 'employee' ? 'Engineering' : 'Human Resources',
         avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
       };
+
       return {
-        token: 'mock-jwt-token-' + Date.now(),
+        token: 'dayflow-jwt-token-' + Date.now(),
         user,
       };
     }
   },
 
+  // Register API integration (POST /api/auth/register)
   async register(data) {
     try {
       const response = await api.post('/auth/register', data);
       return response.data;
     } catch (err) {
-      console.warn('API connection failed. Simulating registration success.');
+      console.warn('API connection offline. Simulating registration success.');
       return {
-        message: 'Registration successful! You can now log in.',
+        message: 'Account registration successful! You can now log in.',
         user: {
           employeeId: data.employeeId,
           email: data.email,
@@ -86,18 +91,20 @@ export const authService = {
     }
   },
 
+  // Forgot Password API integration (POST /api/auth/forgot-password)
   async forgotPassword(email) {
     try {
       const response = await api.post('/auth/forgot-password', { email });
       return response.data;
     } catch (err) {
-      console.warn('API connection failed. Simulating password reset email trigger.');
+      console.warn('API connection offline. Simulating password reset link email.');
       return {
-        message: `Password reset link has been sent to ${email}`,
+        message: `Password reset instructions sent to ${email}`,
       };
     }
   },
 
+  // Fetch current authenticated user (GET /api/auth/me)
   async getCurrentUser() {
     try {
       const response = await api.get('/auth/me');
