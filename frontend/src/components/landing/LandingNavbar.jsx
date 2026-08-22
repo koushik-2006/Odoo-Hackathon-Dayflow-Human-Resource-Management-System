@@ -81,6 +81,17 @@ export default function LandingNavbar() {
 
           {/* Right Action Buttons with Specular Light Effect */}
           <div className="hidden md:flex items-center space-x-3">
+            <SpecularButton
+              size="sm"
+              radius={12}
+              baseColor="#1e293b"
+              lineColor="#64748b"
+              textColor="#f8fafc"
+              onClick={() => navigate('/login')}
+            >
+              Sign In
+            </SpecularButton>
+
             {isAuthenticated ? (
               <SpecularButton
                 size="sm"
@@ -94,30 +105,17 @@ export default function LandingNavbar() {
                 Go to Dashboard
               </SpecularButton>
             ) : (
-              <>
-                <SpecularButton
-                  size="sm"
-                  radius={12}
-                  baseColor="#1e293b"
-                  lineColor="#64748b"
-                  textColor="#f8fafc"
-                  onClick={() => navigate('/login')}
-                >
-                  Sign In
-                </SpecularButton>
-
-                <SpecularButton
-                  size="sm"
-                  radius={12}
-                  baseColor="#6366f1"
-                  lineColor="#ffffff"
-                  textColor="#ffffff"
-                  onClick={() => navigate('/register')}
-                >
-                  Get Started
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </SpecularButton>
-              </>
+              <SpecularButton
+                size="sm"
+                radius={12}
+                baseColor="#6366f1"
+                lineColor="#ffffff"
+                textColor="#ffffff"
+                onClick={() => navigate('/register')}
+              >
+                Get Started
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </SpecularButton>
             )}
           </div>
 
@@ -151,6 +149,12 @@ export default function LandingNavbar() {
             ))}
           </div>
           <div className="pt-3 border-t border-slate-800 flex flex-col space-y-2.5">
+            <button
+              onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
+              className="w-full text-center px-4 py-2.5 text-sm font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+            >
+              Sign In
+            </button>
             {isAuthenticated ? (
               <button
                 onClick={() => { setMobileMenuOpen(false); navigate(dashboardPath); }}
@@ -159,20 +163,12 @@ export default function LandingNavbar() {
                 Go to Dashboard
               </button>
             ) : (
-              <>
-                <button
-                  onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
-                  className="w-full text-center px-4 py-2.5 text-sm font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => { setMobileMenuOpen(false); navigate('/register'); }}
-                  className="w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 rounded-lg shadow-md shadow-indigo-500/20"
-                >
-                  Get Started Free
-                </button>
-              </>
+              <button
+                onClick={() => { setMobileMenuOpen(false); navigate('/register'); }}
+                className="w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 rounded-lg shadow-md shadow-indigo-500/20"
+              >
+                Get Started Free
+              </button>
             )}
           </div>
         </div>
