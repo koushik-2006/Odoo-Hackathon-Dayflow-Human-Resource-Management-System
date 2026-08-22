@@ -3,8 +3,8 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Current Module: MODULE 8 — PAYROLL (COMPLETED)
--- Next Module: MODULE 9 — NOTIFICATIONS
+-- Current Module: MODULE 9 — NOTIFICATIONS (COMPLETED)
+-- Next Module: MODULE 10 — DOCUMENTS
 -- ==============================================================================
 -- Description:
 -- Master schema definition file for the Dayflow HRMS PostgreSQL database.
@@ -368,6 +368,71 @@ BEFORE UPDATE ON payroll
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
+-- ------------------------------------------------------------------------------
+-- MODULE 9: notifications
+-- Purpose: User in-app notifications, event alerts, read state, and reference links.
+-- Relationships:
+--   - users (N : 1): notifications.user_id -> users.id (NOT NULL, CASCADE)
+-- Architecture Note:
+--   - Polymorphic referencing (reference_type + reference_id) is managed at the
+--     application level rather than via hard database foreign keys.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    reference_type VARCHAR(50) NULL,
+    reference_id UUID NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    read_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_notifications_user FOREIGN KEY (user_id)
+        REFERENCES users (id)
+        ON DELETE CASCADE,
+    CONSTRAINT chk_notifications_type CHECK (
+        type IN (
+            'LEAVE_APPLIED',
+            'LEAVE_APPROVED',
+            'LEAVE_REJECTED',
+            'ATTENDANCE_REMINDER',
+            'ATTENDANCE_ALERT',
+            'PAYROLL_PROCESSED',
+            'PAYROLL_PAID',
+            'GENERAL'
+        )
+    ),
+    CONSTRAINT chk_notifications_reference_type CHECK (
+        reference_type IS NULL OR reference_type IN (
+            'LEAVE_REQUEST',
+            'ATTENDANCE',
+            'PAYROLL',
+            'GENERAL'
+        )
+    ),
+    CONSTRAINT chk_notifications_title CHECK (
+        LENGTH(TRIM(title)) > 0
+    ),
+    CONSTRAINT chk_notifications_message CHECK (
+        LENGTH(TRIM(message)) > 0
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC);
+
+DROP TRIGGER IF EXISTS trg_notifications_updated_at ON notifications;
+CREATE TRIGGER trg_notifications_updated_at
+BEFORE UPDATE ON notifications
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
 -- ==============================================================================
 -- PLANNED DATABASE MODULES SPECIFICATION
 -- ==============================================================================
@@ -379,15 +444,9 @@ EXECUTE FUNCTION update_updated_at_column();
 -- 5. MODULE: leave_types [STATUS: IMPLEMENTED in Module 6]
 -- 6. MODULE: leave_requests [STATUS: IMPLEMENTED in Module 7]
 -- 7. MODULE: payroll [STATUS: IMPLEMENTED in Module 8]
+-- 8. MODULE: notifications [STATUS: IMPLEMENTED in Module 9]
 --
--- 8. MODULE: notifications [STATUS: NEXT - Module 9]
---    Purpose: In-app user notifications and workflow event alerts.
---    Scope:
---      - Notification delivery payload (type, title, message, link).
---      - Read status tracking (is_read, read_at).
---      - Recipient user linkage (users.id) and category filtering.
---
--- 9. MODULE: documents [STATUS: PLANNED - Module 10]
+-- 9. MODULE: documents [STATUS: NEXT - Module 10]
 --    Purpose: Centralized employee document repository and HR policy files.
 --    Scope:
 --      - Document metadata (title, category: ID_PROOF, CONTRACT, CERTIFICATION, POLICY).
@@ -395,14 +454,7 @@ EXECUTE FUNCTION update_updated_at_column();
 --      - Verification status (PENDING_VERIFICATION, VERIFIED, REJECTED).
 --      - Access control tags and expiration tracking.
 --
--- 10. MODULE: password_reset_tokens [STATUS: PLANNED - Module 11]
---     Purpose: Secure self-service account recovery.
---     Scope:
---       - Secure, hashed one-time verification tokens.
---       - Expiration timestamps (time-to-live restrictions).
---       - Consumption status (USED, EXPIRED, REVOKED) and request origin metadata.
---
--- 11. MODULE: audit_logs [STATUS: PLANNED - Module 12]
+-- 10. MODULE: audit_logs [STATUS: PLANNED - Module 11]
 --     Purpose: Comprehensive compliance, security, and activity tracking.
 --     Scope:
 --       - Actor tracking (user ID, session ID, client IP address, user agent).
@@ -410,4 +462,11 @@ EXECUTE FUNCTION update_updated_at_column();
 --       - Target resource name and entity identifier.
 --       - Structured JSON change payloads (before/after snapshots).
 --       - Immutable, append-only records with microsecond timestamps.
+--
+-- 11. MODULE: password_reset_tokens [STATUS: PLANNED - Module 12]
+--     Purpose: Secure self-service account recovery.
+--     Scope:
+--       - Secure, hashed one-time verification tokens.
+--       - Expiration timestamps (time-to-live restrictions).
+--       - Consumption status (USED, EXPIRED, REVOKED) and request origin metadata.
 -- ==============================================================================
