@@ -52,16 +52,16 @@ export default function Hero() {
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.12]">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.12]">
               Your People.{' '}
               <span className="block sm:inline">Your Work.</span>{' '}
-              <span className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-600 bg-clip-text text-transparent block sm:inline">
+              <span className="bg-gradient-to-r from-indigo-400 via-indigo-300 to-violet-400 bg-clip-text text-transparent block sm:inline">
                 One Simple Flow.
               </span>
             </h1>
 
             {/* Subtitle */}
-            <p className="text-lg sm:text-xl text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto lg:mx-0">
+            <p className="text-lg sm:text-xl text-slate-300 font-normal leading-relaxed max-w-2xl mx-auto lg:mx-0">
               Dayflow brings attendance, leave, payroll, and employee management together in one beautifully simple workspace.
             </p>
 
@@ -69,29 +69,29 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
               <Link
                 to="/register"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 rounded-xl text-base font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/35 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 rounded-xl text-base font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/40 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
               >
                 Get Started Free
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
               
               <Link
-                to="/login"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 rounded-xl text-base font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 shadow-sm transition-all duration-200 hover:-translate-y-0.5"
+                to="/employee/dashboard"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 rounded-xl text-base font-semibold text-slate-200 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 shadow-lg backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5"
               >
-                <LayoutDashboard className="w-5 h-5 mr-2 text-indigo-600" />
+                <LayoutDashboard className="w-5 h-5 mr-2 text-indigo-400" />
                 Explore Dashboard
               </Link>
             </div>
 
             {/* Subtext */}
-            <div className="pt-3 flex items-center justify-center lg:justify-start space-x-2 text-xs sm:text-sm font-medium text-slate-500">
-              <span>Built for</span>
-              <span className="font-semibold text-slate-700">Employees</span>
-              <span>•</span>
-              <span className="font-semibold text-slate-700">HR Teams</span>
-              <span>•</span>
-              <span className="font-semibold text-slate-700">Administrators</span>
+            <div className="pt-3 flex items-center justify-center lg:justify-start space-x-2 text-xs sm:text-sm font-medium text-slate-300">
+              <span className="text-slate-400">Built for</span>
+              <span className="font-bold text-white">Employees</span>
+              <span className="text-indigo-400">•</span>
+              <span className="font-bold text-white">HR Teams</span>
+              <span className="text-indigo-400">•</span>
+              <span className="font-bold text-white">Administrators</span>
             </div>
           </motion.div>
 

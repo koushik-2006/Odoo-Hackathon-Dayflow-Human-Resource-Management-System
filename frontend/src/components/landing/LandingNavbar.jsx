@@ -39,8 +39,8 @@ export default function LandingNavbar() {
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs py-3'
-          : 'bg-white/70 backdrop-blur-sm border-b border-slate-200/50 py-4.5'
+          ? 'bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl py-3'
+          : 'bg-slate-950/70 backdrop-blur-md border-b border-slate-800/50 py-4'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -50,14 +50,14 @@ export default function LandingNavbar() {
             to="/"
             className="flex items-center space-x-2.5 group transition-transform duration-200 active:scale-98"
           >
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:shadow-indigo-500/30 transition-shadow">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/30 group-hover:shadow-indigo-500/40 transition-shadow">
               <Layers className="h-5 w-5" />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-xl tracking-tight text-slate-900 leading-none">
+              <span className="font-bold text-xl tracking-tight text-white leading-none">
                 Dayflow
               </span>
-              <span className="text-[10px] font-semibold text-indigo-600 uppercase tracking-widest leading-tight">
+              <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-widest leading-tight">
                 HR Platform
               </span>
             </div>
@@ -70,7 +70,7 @@ export default function LandingNavbar() {
                 key={link.name}
                 href={link.href}
                 onClick={(e) => handleNavClick(e, link.href)}
-                className="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-100/80 rounded-lg transition-colors"
+                className="px-3.5 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-lg transition-colors"
               >
                 {link.name}
               </a>
@@ -82,7 +82,7 @@ export default function LandingNavbar() {
             {isAuthenticated ? (
               <Link
                 to={dashboardPath}
-                className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm shadow-indigo-500/20 transition-all duration-200 hover:shadow-indigo-500/30 active:scale-98"
+                className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-md shadow-indigo-500/30 transition-all duration-200 active:scale-98"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
                 Go to Dashboard
@@ -91,13 +91,13 @@ export default function LandingNavbar() {
               <>
                 <Link
                   to="/login"
-                  className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-semibold text-slate-200 hover:text-white hover:bg-slate-800/80 border border-slate-700/60 rounded-lg transition-colors"
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/register"
-                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 rounded-lg shadow-sm shadow-indigo-500/25 hover:shadow-indigo-500/35 transition-all duration-200 active:scale-98"
+                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 rounded-lg shadow-md shadow-indigo-500/30 transition-all duration-200 active:scale-98"
                 >
                   Get Started
                   <ArrowRight className="w-4 h-4 ml-1.5" />

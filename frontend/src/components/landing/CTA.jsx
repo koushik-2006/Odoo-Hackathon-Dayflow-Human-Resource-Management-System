@@ -5,7 +5,7 @@ import { ArrowRight, Sparkles, LogIn } from 'lucide-react';
 
 export default function CTA() {
   return (
-    <section className="py-20 bg-slate-50 relative overflow-hidden">
+    <section className="py-20 bg-transparent relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Banner Box */}
@@ -14,7 +14,7 @@ export default function CTA() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
-          className="relative bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 rounded-3xl p-8 sm:p-12 lg:p-16 text-white text-center shadow-2xl overflow-hidden"
+          className="relative bg-gradient-to-r from-indigo-950/90 via-slate-900/95 to-purple-950/90 border border-indigo-500/30 backdrop-blur-xl rounded-3xl p-8 sm:p-12 lg:p-16 text-white text-center shadow-2xl overflow-hidden"
         >
           {/* Subtle Decorative Background Circles & Glow */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />

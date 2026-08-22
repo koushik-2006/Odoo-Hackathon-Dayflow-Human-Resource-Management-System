@@ -27,25 +27,25 @@ export default function SecuritySection() {
   ];
 
   return (
-    <section id="security" className="py-20 bg-white border-t border-slate-200/80">
+    <section id="security" className="py-20 bg-transparent border-t border-slate-800/80 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto space-y-3 mb-16">
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold uppercase tracking-wider">
             SECURITY & RELIABILITY
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
             Built with security and control in mind.
           </h2>
-          <p className="text-slate-600 text-base">
-            Designed to safeguard employee data and ensure seamless operational continuity.
+          <p className="text-base sm:text-lg text-slate-300">
+            Dayflow is designed to protect organization data while keeping access smooth and straightforward.
           </p>
         </div>
 
-        {/* 4 Items Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {trustItems.map((item, idx) => {
+        {/* Security Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {trustItems.map((item, index) => {
             const Icon = item.icon;
             return (
               <motion.div
@@ -53,16 +53,16 @@ export default function SecuritySection() {
                 initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="bg-slate-50 p-6 rounded-2xl border border-slate-200/80 hover:bg-white hover:shadow-lg hover:border-indigo-200 transition-all duration-300 group"
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="bg-slate-900/70 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-xl space-y-4 hover:border-indigo-500/40 transition-all"
               >
-                <div className="w-12 h-12 rounded-xl bg-indigo-50 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white flex items-center justify-center mb-4 transition-all duration-300 shadow-xs">
-                  <Icon className="w-6 h-6" />
+                <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 w-fit">
+                  <Icon className="w-5 h-5" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">
+                <h3 className="text-lg font-bold text-white">
                   {item.title}
                 </h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-xs text-slate-300 leading-relaxed">
                   {item.description}
                 </p>
               </motion.div>

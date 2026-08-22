@@ -51,18 +51,18 @@ export default function Features() {
   ];
 
   return (
-    <section id="features" className="py-20 bg-slate-50 relative">
+    <section id="features" className="py-20 bg-transparent relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold uppercase tracking-wider">
             Features Overview
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
             Everything your team needs to work better.
           </h2>
-          <p className="text-lg text-slate-600 font-normal">
+          <p className="text-lg text-slate-300 font-normal">
             Powerful HR tools designed around the everyday employee experience.
           </p>
         </div>
@@ -78,32 +78,30 @@ export default function Features() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.08 }}
-                className="group relative bg-white p-8 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-300 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between"
+                className="group relative bg-slate-900/70 backdrop-blur-md rounded-2xl p-8 border border-slate-800/80 hover:border-indigo-500/40 shadow-xl hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
               >
                 <div>
-                  {/* Top Bar inside Card */}
                   <div className="flex items-center justify-between mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-indigo-50 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white flex items-center justify-center transition-all duration-300 shadow-xs">
+                    <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
                       <Icon className="w-6 h-6" />
                     </div>
-                    <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md group-hover:bg-indigo-50 group-hover:text-indigo-700 transition-colors">
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
                       {feature.badge}
                     </span>
                   </div>
 
-                  {/* Title & Description */}
-                  <h3 className="text-xl font-bold text-slate-900 mb-2.5 group-hover:text-indigo-600 transition-colors">
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors">
                     {feature.title}
                   </h3>
-                  <p className="text-slate-600 text-sm leading-relaxed">
+
+                  <p className="text-slate-300 text-sm leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
 
-                {/* Subtle Hover Action Footer */}
-                <div className="mt-6 pt-4 border-t border-slate-100 flex items-center text-xs font-semibold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="pt-6 mt-6 border-t border-slate-800/80 flex items-center text-xs font-semibold text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <span>Learn more</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 ml-1 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  <ArrowUpRight className="w-4 h-4 ml-1" />
                 </div>
               </motion.div>
             );

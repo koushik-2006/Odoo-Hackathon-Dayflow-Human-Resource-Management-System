@@ -7,6 +7,7 @@ import {
   RefreshCw,
   AlertCircle,
   TrendingUp,
+  BarChart2,
   BellRing,
   ArrowRight,
   Sun,
@@ -18,6 +19,8 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
+  AreaChart,
+  Area,
   BarChart,
   Bar,
   XAxis,
@@ -29,6 +32,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import StatCard from '../../components/employee/StatCard';
 import ActivityItem from '../../components/employee/ActivityItem';
+import Aurora from '../../components/common/Aurora';
 
 import { getMyAttendance } from '../../services/attendanceService';
 import { getMyLeaves } from '../../services/leaveService';
@@ -170,6 +174,12 @@ export default function Dashboard({ user }) {
 
       {/* 1. WELCOME SECTION */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 shadow-xl border border-indigo-900/40">
+        <Aurora
+          colorStops={["#7cff67","#B497CF","#5227FF"]}
+          blend={0.5}
+          amplitude={1.0}
+          speed={1}
+        />
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
@@ -278,86 +288,156 @@ export default function Dashboard({ user }) {
           </div>
         </div>
 
-        {/* ATTENDANCE MINI-CHART SECTION */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-indigo-600" />
-                Attendance Overview
-              </h2>
-              <p className="text-xs text-slate-500">Work hours this week</p>
+        {/* ATTENDANCE MINI-CHART SECTION — EFFERD-STYLE ANIMATED ANALYTICS PANEL */}
+        <div className="lg:col-span-2 bg-slate-900/80 rounded-2xl p-6 border border-slate-800/80 backdrop-blur-xl shadow-xl space-y-4 flex flex-col justify-between">
+          {/* Card Header & Efferd Toggle Controls */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                  Attendance Overview
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    8.0h / day target
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-400 font-medium">Work hours logged this week</p>
+              </div>
             </div>
 
-            <div className="bg-slate-100 p-1 rounded-xl flex items-center text-xs font-semibold">
+            {/* Efferd Animated Chart Toggle Buttons */}
+            <div className="bg-slate-950/80 p-1 rounded-xl border border-slate-800/90 flex items-center gap-1 text-xs font-semibold self-start sm:self-auto">
               <button
                 onClick={() => setChartType('line')}
-                className={`px-3 py-1 rounded-lg transition-colors ${
-                  chartType === 'line' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center gap-1.5 ${
+                  chartType === 'line'
+                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30 font-bold'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                 }`}
               >
+                <TrendingUp className="w-3.5 h-3.5" />
                 Line Chart
               </button>
               <button
                 onClick={() => setChartType('bar')}
-                className={`px-3 py-1 rounded-lg transition-colors ${
-                  chartType === 'bar' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center gap-1.5 ${
+                  chartType === 'bar'
+                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30 font-bold'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                 }`}
               >
+                <BarChart2 className="w-3.5 h-3.5" />
                 Bar Chart
               </button>
             </div>
           </div>
 
+          {/* Efferd Chart Display */}
           {loading ? (
-            <div className="h-64 w-full bg-slate-50 rounded-xl animate-pulse flex items-center justify-center text-xs text-slate-400">
-              Loading Chart Data...
+            <div className="h-64 w-full bg-slate-950/50 rounded-xl border border-slate-800/50 animate-pulse flex flex-col items-center justify-center gap-2 text-xs text-slate-400">
+              <RefreshCw className="w-5 h-5 text-indigo-400 animate-spin" />
+              <span>Loading Analytics Chart...</span>
             </div>
           ) : (
             <div className="h-64 w-full pt-2">
               <ResponsiveContainer width="100%" height="100%">
                 {chartType === 'line' ? (
-                  <LineChart data={attendanceData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} domain={[0, 10]} />
+                  <AreaChart data={attendanceData} margin={{ top: 15, right: 15, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="efferdColorHours" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366F1" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#6366F1" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255, 255, 255, 0.06)" />
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#94A3B8', fontSize: 12, fontWeight: 600 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#94A3B8', fontSize: 12, fontWeight: 600 }}
+                      domain={[0, 10]}
+                    />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#0F172A',
-                        borderRadius: '12px',
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        backdropFilter: 'blur(12px)',
+                        borderRadius: '14px',
                         color: '#FFF',
-                        border: 'none',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
                         fontSize: '12px',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                        fontWeight: 600,
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+                        padding: '10px 14px',
                       }}
-                      formatter={(value) => [`${value} hours`, 'Work Hours']}
+                      formatter={(value) => [`${value} hrs`, 'Work Logged']}
+                      labelStyle={{ color: '#818CF8', fontWeight: 700, marginBottom: '2px' }}
                     />
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="hours"
-                      stroke="#4F46E5"
+                      stroke="#6366F1"
                       strokeWidth={3}
-                      dot={{ r: 4, fill: '#4F46E5', strokeWidth: 2, stroke: '#FFF' }}
-                      activeDot={{ r: 6 }}
+                      fillOpacity={1}
+                      fill="url(#efferdColorHours)"
+                      isAnimationActive={true}
+                      animationDuration={1200}
+                      animationEasing="ease-in-out"
+                      dot={{ r: 4, fill: '#6366F1', strokeWidth: 2, stroke: '#FFFFFF' }}
+                      activeDot={{ r: 7, fill: '#818CF8', strokeWidth: 2, stroke: '#FFFFFF' }}
                     />
-                  </LineChart>
+                  </AreaChart>
                 ) : (
-                  <BarChart data={attendanceData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} domain={[0, 10]} />
+                  <BarChart data={attendanceData} margin={{ top: 15, right: 15, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="efferdBarGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#6366F1" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#a855f7" stopOpacity={0.8} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255, 255, 255, 0.06)" />
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#94A3B8', fontSize: 12, fontWeight: 600 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#94A3B8', fontSize: 12, fontWeight: 600 }}
+                      domain={[0, 10]}
+                    />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#0F172A',
-                        borderRadius: '12px',
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        backdropFilter: 'blur(12px)',
+                        borderRadius: '14px',
                         color: '#FFF',
-                        border: 'none',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
                         fontSize: '12px',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                        fontWeight: 600,
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+                        padding: '10px 14px',
                       }}
-                      formatter={(value) => [`${value} hours`, 'Work Hours']}
+                      formatter={(value) => [`${value} hrs`, 'Work Logged']}
+                      labelStyle={{ color: '#818CF8', fontWeight: 700, marginBottom: '2px' }}
                     />
-                    <Bar dataKey="hours" fill="#4F46E5" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                    <Bar
+                      dataKey="hours"
+                      fill="url(#efferdBarGradient)"
+                      radius={[8, 8, 0, 0]}
+                      maxBarSize={38}
+                      isAnimationActive={true}
+                      animationDuration={1000}
+                      animationEasing="ease-out"
+                    />
                   </BarChart>
                 )}
               </ResponsiveContainer>

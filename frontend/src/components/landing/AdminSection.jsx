@@ -24,7 +24,7 @@ export default function AdminSection() {
   ];
 
   return (
-    <section className="py-20 bg-slate-50 border-t border-slate-200/80 overflow-hidden">
+    <section className="py-20 bg-transparent border-t border-slate-800/80 overflow-hidden text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           
@@ -36,26 +36,26 @@ export default function AdminSection() {
             transition={{ duration: 0.7 }}
             className="lg:col-span-6 space-y-6"
           >
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-violet-50 border border-violet-200/80 text-violet-700 text-xs font-semibold uppercase tracking-wider">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-semibold uppercase tracking-wider">
               FOR HR & ADMINS
             </div>
 
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
               A smarter way to manage your workforce.
             </h2>
 
-            <p className="text-base sm:text-lg text-slate-600 leading-relaxed">
-              HR teams and administrators get the visibility they need to manage employees, attendance, leave requests, payroll, and organizational activity.
+            <p className="text-base sm:text-lg text-slate-300 leading-relaxed">
+              HR managers and administrators gain complete visibility into employee records, real-time attendance logs, pending leave approvals, and payroll workflows.
             </p>
 
             {/* Checklist */}
             <div className="space-y-3 pt-2">
-              {adminFeatures.map((feature) => (
-                <div key={feature} className="flex items-start space-x-3">
-                  <div className="mt-0.5 p-1 rounded-full bg-indigo-100 text-indigo-700 shrink-0">
+              {adminFeatures.map((item) => (
+                <div key={item} className="flex items-start space-x-3">
+                  <div className="mt-0.5 p-1 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30 shrink-0">
                     <Check className="w-4 h-4" />
                   </div>
-                  <span className="text-slate-700 font-medium text-base">{feature}</span>
+                  <span className="text-slate-200 font-medium text-base">{item}</span>
                 </div>
               ))}
             </div>

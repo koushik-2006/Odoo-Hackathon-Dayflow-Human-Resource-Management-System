@@ -358,20 +358,20 @@ export default function Attendance() {
             {/* View Mode Toggle */}
             <div className="bg-slate-100 p-1 rounded-xl flex items-center text-xs font-semibold">
               <button
-                onClick={() => setTimeRange('daily')}
-                className={`px-3 py-1.5 rounded-lg transition-colors ${timeRange === 'daily' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                onClick={() => setTimeFilter('Daily')}
+                className={`px-3 py-1.5 rounded-lg transition-colors ${timeFilter === 'Daily' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 Daily
               </button>
               <button
-                onClick={() => setTimeRange('weekly')}
-                className={`px-3 py-1.5 rounded-lg transition-colors ${timeRange === 'weekly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                onClick={() => setTimeFilter('Weekly')}
+                className={`px-3 py-1.5 rounded-lg transition-colors ${timeFilter === 'Weekly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 Weekly
               </button>
               <button
-                onClick={() => setTimeRange('monthly')}
-                className={`px-3 py-1.5 rounded-lg transition-colors ${timeRange === 'monthly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                onClick={() => setTimeFilter('Monthly')}
+                className={`px-3 py-1.5 rounded-lg transition-colors ${timeFilter === 'Monthly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 Monthly
               </button>

@@ -28,19 +28,19 @@ export default function DashboardPreview() {
   ];
 
   return (
-    <section className="py-24 bg-slate-50 border-t border-slate-200/80 relative overflow-hidden">
+    <section className="py-24 bg-transparent border-t border-slate-800/80 relative overflow-hidden text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-violet-50 border border-violet-200/80 text-violet-700 text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-semibold uppercase tracking-wider">
             PRODUCT SHOWCASE
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
             Everything flows together.
           </h2>
-          <p className="text-lg text-slate-600">
-            One connected workspace for your entire employee lifecycle.
+          <p className="text-base sm:text-lg text-slate-300">
+            Preview how Dayflow unifies core HR functions into a single interface.
           </p>
         </div>
 

@@ -31,7 +31,7 @@ export default function Stats() {
   ];
 
   return (
-    <section className="py-10 bg-white border-y border-slate-200/80">
+    <section className="py-10 bg-slate-900/60 backdrop-blur-xl border-y border-slate-800/80 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
           {stats.map((stat, index) => {
@@ -43,20 +43,20 @@ export default function Stats() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="flex flex-col items-center md:items-start p-4 rounded-xl hover:bg-slate-50/80 transition-colors"
+                className="flex flex-col items-center md:items-start p-4 rounded-xl hover:bg-slate-800/50 transition-colors"
               >
-                <div className="flex items-center space-x-2 text-indigo-600 mb-2">
-                  <div className="p-2 rounded-lg bg-indigo-50 border border-indigo-100">
-                    <Icon className="w-5 h-5 text-indigo-600" />
+                <div className="flex items-center space-x-2 text-indigo-400 mb-2">
+                  <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                    <Icon className="w-5 h-5 text-indigo-400" />
                   </div>
                 </div>
-                <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
                   {stat.value}
                 </div>
-                <div className="text-sm font-semibold text-slate-800 mt-1">
+                <div className="text-sm font-bold text-slate-200 mt-1">
                   {stat.label}
                 </div>
-                <div className="text-xs text-slate-500 mt-0.5">
+                <div className="text-xs text-slate-400 mt-0.5">
                   {stat.description}
                 </div>
               </motion.div>
