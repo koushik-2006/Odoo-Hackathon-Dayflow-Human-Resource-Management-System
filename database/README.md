@@ -2,7 +2,7 @@
 
 > **Project Name:** Dayflow - Human Resource Management System  
 > **Tagline:** *Every workday, perfectly aligned.*  
-> **Current Module:** Module 1 — Database Initialization (CURRENT)  
+> **Current Module:** Module 2 — Users (COMPLETED) / Module 3 — Departments (NEXT)  
 > **Database Engine:** PostgreSQL (Version 14+)  
 > **Database Name:** `dayflow`  
 > **Default Host:** `localhost`  
@@ -30,10 +30,11 @@ The **Dayflow HRMS** PostgreSQL database serves as the centralized, reliable, an
 
 | Attribute | Details |
 | :--- | :--- |
-| **Current Active Module** | **Module 1: Database Initialization** |
-| **Module Scope** | Clean database directory structure, configuration templates, schema foundation, migration/seed guidelines, and security policies. |
-| **Business Tables Created** | **None** *(strictly deferred to subsequent modules)* |
-| **Next Scheduled Module** | **Module 2: Users** |
+| **Completed Modules** | **Module 1 (Database Initialization)**, **Module 2 (Users)** |
+| **Active / Next Module** | **Module 3: Departments** |
+| **Active Tables** | `users` |
+| **Active Migrations** | `V1__create_users.sql` |
+| **Active Seeds** | `database/seeds/users.sql` |
 
 ---
 
@@ -45,9 +46,9 @@ The Dayflow database architecture is partitioned into 12 structured, sequential 
 ┌────────────────────────────────────────────────────────┐
 │             DAYFLOW HRMS DATABASE ROADMAP              │
 ├────────────┬─────────────────────────────┬─────────────┤
-│  Module 1  │ Database Initialization     │   CURRENT   │
-│  Module 2  │ Users                       │   PLANNED   │
-│  Module 3  │ Departments                 │   PLANNED   │
+│  Module 1  │ Database Initialization     │  COMPLETED  │
+│  Module 2  │ Users                       │  COMPLETED  │
+│  Module 3  │ Departments                 │    NEXT     │
 │  Module 4  │ Employees                   │   PLANNED   │
 │  Module 5  │ Attendance                  │   PLANNED   │
 │  Module 6  │ Leave Types                 │   PLANNED   │
@@ -60,9 +61,9 @@ The Dayflow database architecture is partitioned into 12 structured, sequential 
 └────────────┴─────────────────────────────┴─────────────┘
 ```
 
-- **Module 1: Database Initialization (CURRENT)** — Database foundation, extensions (`uuid-ossp`, `pgcrypto`), migration & seeding architecture, and environment configuration templates.
-- **Module 2: Users** — Core authentication entity, role designations, status flags, and credential records.
-- **Module 3: Departments** — Department hierarchy, head-of-department assignments, and organizational units.
+- **Module 1: Database Initialization (COMPLETED)** — Database foundation, extensions (`uuid-ossp`, `pgcrypto`), migration & seeding architecture, and environment configuration templates.
+- **Module 2: Users (COMPLETED)** — Core authentication entity (`users` table), role designations (`SUPER_ADMIN`, `HR_ADMIN`, `MANAGER`, `EMPLOYEE`), account status flags, timestamps, and seed accounts.
+- **Module 3: Departments (NEXT)** — Department hierarchy, head-of-department assignments, and organizational units.
 - **Module 4: Employees** — Personal profiles, employment records, contact details, designations, and reporting structures.
 - **Module 5: Attendance** — Daily timesheets, clock-in/out timestamps, shift schedules, and overtime tracking.
 - **Module 6: Leave Types** — Organization leave policy configuration, quotas, carryover rules, and accrual types.
@@ -80,12 +81,14 @@ The Dayflow database architecture is partitioned into 12 structured, sequential 
 ```text
 database/
 ├── migrations/
-│   └── README.md          # Migration versioning rules, naming conventions, and roadmap
+│   ├── README.md               # Migration versioning rules and roadmap
+│   └── V1__create_users.sql    # Migration V1: users table, triggers, and indexes
 ├── seeds/
-│   └── README.md          # Seed data execution dependencies and synthetic data rules
-├── schema.sql             # Master database initialization & module specification
-├── seed.sql               # Master seed orchestration entry point
-└── README.md              # Master database documentation (this file)
+│   ├── README.md               # Seed data execution dependencies and rules
+│   └── users.sql               # Seed data for demo user accounts
+├── schema.sql                  # Master schema definition & active tables
+├── seed.sql                    # Master seed orchestration script
+└── README.md                   # Master database documentation (this file)
 ```
 
 ---
@@ -114,9 +117,14 @@ database/
        CONNECTION LIMIT = -1;
    ```
 
-3. **Apply the Master Schema Initialization (Module 1 Foundation):**
+3. **Apply Schema & Migrations:**
    ```bash
    psql -U postgres -h localhost -p 5432 -d dayflow -f database/schema.sql
+   ```
+
+4. **Apply Seed Data:**
+   ```bash
+   psql -U postgres -h localhost -p 5432 -d dayflow -f database/seed.sql
    ```
 
 ---
@@ -137,6 +145,7 @@ docker run --name dayflow-postgres \
 Execute initialization script inside container:
 ```bash
 docker exec -i dayflow-postgres psql -U postgres -d dayflow < database/schema.sql
+docker exec -i dayflow-postgres psql -U postgres -d dayflow < database/seed.sql
 ```
 
 ---
@@ -165,45 +174,9 @@ DB_MAX_CONNECTIONS=20
 DB_TIMEOUT_SECONDS=30
 ```
 
-### Parameter Reference
-
-| Variable | Default Value | Description |
-| :--- | :--- | :--- |
-| `DB_HOST` | `localhost` | Hostname or IP address of the PostgreSQL server |
-| `DB_PORT` | `5432` | Port on which PostgreSQL is accepting connections |
-| `DB_NAME` | `dayflow` | Target database catalog name |
-| `DB_USERNAME` | `postgres` | Database user account with required table permissions |
-| `DB_PASSWORD` | *(None / Required)* | Password for the specified database user account |
-| `DB_SSL_MODE` | `disable` | SSL mode (`disable`, `require`, `verify-ca`, `verify-full`) |
-
 ---
 
-## 7. Migration Strategy
-
-- **Tooling Agnostic:** Compatible with Flyway, Liquibase, db-migrate, Prisma, or custom migration runners.
-- **Naming Pattern:** `V<VersionNumber>__<description>.sql` (e.g., `V1__create_users.sql`, `V2__create_departments.sql`).
-- **Atomic Migrations:** Each migration file must execute within an isolated transaction where possible.
-- **Strict Ordering:** Migration versions must be strictly incremental and monotonic. Never edit an already-applied migration file in shared or deployed environments.
-
----
-
-## 8. Seed Data Strategy
-
-- **Development Only:** Seed data is designed strictly for local testing, CI pipelines, and demonstration environments.
-- **Execution Order:** Must respect foreign-key hierarchies:
-  1. `departments.sql`
-  2. `users.sql`
-  3. `employees.sql`
-  4. `leave_types.sql`
-  5. `attendance.sql`
-  6. `leave_requests.sql`
-  7. `payroll.sql`
-  8. `notifications.sql`
-- **Synthetic Data Guarantee:** All mock data must be generated using realistic but synthetic values. Real employee information or production credentials must never be included.
-
----
-
-## 9. Security Best Practices
+## 7. Security Best Practices
 
 1. **Zero Credential Exposure:** Never commit `.env` files, plaintext passwords, private keys, or connection strings to version control.
 2. **Password Cryptography:** User passwords must always be hashed using modern algorithms (Argon2id, bcrypt) with high work factors before insertion into the database.

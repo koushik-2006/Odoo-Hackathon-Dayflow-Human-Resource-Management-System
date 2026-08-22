@@ -3,36 +3,26 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Module: MODULE 1 — DATABASE INITIALIZATION
+-- Current Module: MODULE 2 — USERS
 -- ==============================================================================
 -- Description:
 -- Master seed file for the Dayflow HRMS PostgreSQL database.
---
--- At this initialization stage (Module 1), this file acts as the master entry
--- point and documentation for future demo and reference seed data.
---
--- NOTE: Seed data will be populated only AFTER corresponding database tables
--- and migrations have been implemented in subsequent modules.
--- NO ACTUAL RECORDS ARE INSERTED AT THIS STAGE.
+-- Executes seed datasets in dependency order across implemented modules.
 -- ==============================================================================
 
--- ==============================================================================
--- FUTURE SEED ORCHESTRATION WORKFLOW
--- ==============================================================================
--- When database tables are established in future modules, this master seed file
--- or individual files in 'database/seeds/' will populate initial datasets in the
--- following dependency order:
---
--- 1. \ir seeds/departments.sql       -- Base organizational hierarchy & departments
--- 2. \ir seeds/users.sql             -- Baseline user authentication accounts
--- 3. \ir seeds/employees.sql         -- Employee profile records & assignments
--- 4. \ir seeds/leave_types.sql       -- Organizational leave policy configurations
--- 5. \ir seeds/attendance.sql        -- Sample attendance and timesheet logs
--- 6. \ir seeds/leave_requests.sql    -- Demonstration leave applications & approval logs
--- 7. \ir seeds/payroll.sql           -- Salary configurations & demonstration payslips
--- 8. \ir seeds/notifications.sql     -- Sample in-app and system broadcast messages
--- ==============================================================================
+-- ------------------------------------------------------------------------------
+-- 1. Implemented Module Seed Scripts
+-- ------------------------------------------------------------------------------
+-- Include user accounts seed data:
+\ir seeds/users.sql
 
--- Placeholder notice:
--- Database schema tables must be deployed prior to running seed data ingestion.
--- [STATUS: Awaiting schema implementation in Modules 2-12]
+-- ------------------------------------------------------------------------------
+-- 2. Future Module Seed Sequence (To Be Activated as Tables are Created)
+-- ------------------------------------------------------------------------------
+-- \ir seeds/departments.sql       -- Base organizational hierarchy & departments (Module 3)
+-- \ir seeds/employees.sql         -- Employee profile records & assignments (Module 4)
+-- \ir seeds/leave_types.sql       -- Organizational leave policy configurations (Module 6)
+-- \ir seeds/attendance.sql        -- Sample attendance and timesheet logs (Module 5)
+-- \ir seeds/leave_requests.sql    -- Demonstration leave applications & approval logs (Module 7)
+-- \ir seeds/payroll.sql           -- Salary configurations & demonstration payslips (Module 8)
+-- \ir seeds/notifications.sql     -- Sample in-app and system broadcast messages (Module 9)
