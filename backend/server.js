@@ -1,13 +1,14 @@
 import express from 'express';
 import cors from 'cors';
+import { testDatabaseConnection, pool } from './db.js';
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
-// In-Memory Database / Employee Entity Records
+// In-Memory Fallback Dataset
 let employees = [
   { id: 'EMP001', name: 'John Doe', email: 'john@example.com', phone: '9876543210', department: 'IT', designation: 'Developer', role: 'Employee', status: 'Active', joiningDate: '2025-01-10', gender: 'Male', dob: '1995-05-15', address: 'Chennai', employmentType: 'FULL_TIME' },
   { id: 'EMP002', name: 'Jane Doe', email: 'jane@example.com', phone: '9876543211', department: 'HR', designation: 'Manager', role: 'HR', status: 'Active', joiningDate: '2024-03-12', gender: 'Female', dob: '1992-08-22', address: 'Mumbai', employmentType: 'FULL_TIME' },
@@ -16,7 +17,6 @@ let employees = [
   { id: 'EMP005', name: 'Charlie Brown', email: 'charlie@example.com', phone: '9876543214', department: 'IT', designation: 'QA Specialist', role: 'Employee', status: 'Inactive', joiningDate: '2024-06-20', gender: 'Male', dob: '1994-02-10', address: 'Pune', employmentType: 'FULL_TIME' }
 ];
 
-// Mock database metrics for details integration
 let attendanceSummary = {
   EMP001: { present: 108, absent: 5, leave: 8, halfDay: 3 },
   EMP002: { present: 120, absent: 2, leave: 4, halfDay: 1 },
@@ -41,40 +41,85 @@ let payrollRecords = {
   EMP005: { basicSalary: 35000, hra: 7000, allowances: 4000, deductions: 2500, netSalary: 43500 }
 };
 
-// MODULE 21 — Admin Employee Management Route API
-app.get('/api/admin/employees', (req, res) => {
-  const { search, department, role, status } = req.query;
-  let result = [...employees];
-
-  if (search) {
-    const q = search.toLowerCase();
-    result = result.filter(e => 
-      e.name.toLowerCase().includes(q) || 
-      e.id.toLowerCase().includes(q) || 
-      e.email.toLowerCase().includes(q)
-    );
-  }
-
-  if (department && department !== 'All') {
-    result = result.filter(e => e.department === department);
-  }
-
-  if (role && role !== 'All') {
-    result = result.filter(e => e.role === role);
-  }
-
-  if (status && status !== 'All') {
-    result = result.filter(e => e.status === status);
-  }
-
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+  const dbConnected = await testDatabaseConnection();
   res.json({
-    success: true,
-    employees: result
+    status: 'online',
+    database: dbConnected ? 'postgresql_connected' : 'in_memory_fallback',
+    timestamp: new Date().toISOString()
   });
 });
 
+// MODULE 21 — Admin Employee Management Route API
+app.get('/api/admin/employees', async (req, res) => {
+  const { search, department, role, status } = req.query;
+
+  try {
+    const dbRes = await pool.query(
+      `SELECT e.id, e.employee_code as "employeeId", e.first_name || ' ' || e.last_name as name,
+              u.email, e.phone, d.name as department, e.designation, u.role, e.employment_status as status,
+              e.joining_date as "joiningDate", e.gender, e.date_of_birth as dob, e.address, e.employment_type as "employmentType"
+       FROM employees e
+       JOIN users u ON e.user_id = u.id
+       LEFT JOIN departments d ON e.department_id = d.id`
+    );
+
+    let dbEmployees = dbRes.rows;
+    if (search) {
+      const q = search.toLowerCase();
+      dbEmployees = dbEmployees.filter(e =>
+        (e.name && e.name.toLowerCase().includes(q)) ||
+        (e.id && e.id.toLowerCase().includes(q)) ||
+        (e.email && e.email.toLowerCase().includes(q))
+      );
+    }
+    if (department && department !== 'All') {
+      dbEmployees = dbEmployees.filter(e => e.department === department);
+    }
+    if (role && role !== 'All') {
+      dbEmployees = dbEmployees.filter(e => e.role === role);
+    }
+    if (status && status !== 'All') {
+      dbEmployees = dbEmployees.filter(e => e.status === status);
+    }
+
+    return res.json({
+      success: true,
+      source: 'postgresql',
+      employees: dbEmployees
+    });
+  } catch (err) {
+    // In-memory fallback
+    let result = [...employees];
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(e =>
+        e.name.toLowerCase().includes(q) ||
+        e.id.toLowerCase().includes(q) ||
+        e.email.toLowerCase().includes(q)
+      );
+    }
+    if (department && department !== 'All') {
+      result = result.filter(e => e.department === department);
+    }
+    if (role && role !== 'All') {
+      result = result.filter(e => e.role === role);
+    }
+    if (status && status !== 'All') {
+      result = result.filter(e => e.status === status);
+    }
+
+    res.json({
+      success: true,
+      source: 'fallback_mock',
+      employees: result
+    });
+  }
+});
+
 // MODULE 22 — Admin Employee Details API
-app.get('/api/admin/employees/:id', (req, res) => {
+app.get('/api/admin/employees/:id', async (req, res) => {
   const { id } = req.params;
   const emp = employees.find(e => e.id === id);
 
@@ -95,6 +140,8 @@ app.get('/api/admin/employees/:id', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Consolidated Backend Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Dayflow Backend Server running on http://localhost:${PORT}`);
+  testDatabaseConnection();
 });
+
 export { employees, attendanceSummary, leaveSummary, payrollRecords };

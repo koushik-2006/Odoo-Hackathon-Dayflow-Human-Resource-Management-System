@@ -11,14 +11,35 @@ lerna-debug.log*
 node_modules/
 dist/
 dist-ssr/
+build/
 *.local
 
-# Environment & IDE
+# Environment & Credentials
 .env
 .env.local
+.env.*.local
+*.env
+
+# Database Dumps and Backups
+*.dump
+*.sql.bak
+*.sql.gz
+*.tar
+*.bak
+
+# Security and Keys
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+
+# IDE and OS
 .vscode/
 .idea/
 .DS_Store
+Thumbs.db
+desktop.ini
 *.suo
 *.ntvs*
 *.njsproj
