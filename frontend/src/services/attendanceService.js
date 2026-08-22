@@ -1,3 +1,4 @@
+/** Module 6 — Employee Attendance Service */
 import api from './api';
 
 // Attendance API Service for Employee Experience

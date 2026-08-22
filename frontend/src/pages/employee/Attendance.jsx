@@ -1,3 +1,4 @@
+/** Module 6 — Employee Attendance */
 import React, { useState, useEffect } from 'react';
 import {
   Clock,
