@@ -19,13 +19,13 @@ Because relational integrity is enforced by foreign keys, seed files MUST be exe
 | **1** | `departments.sql` | Standard corporate departments (`IT`, `HR`, `FIN`, `MKT`, `SALES`, `OPS`) | **Module 3 (ACTIVE)** | *None (Independent)* |
 | **2** | `users.sql` | Demo accounts with pre-hashed bcrypt passwords and Dayflow roles (`ADMIN`, `HR`, `EMPLOYEE`) | **Module 2 (ACTIVE)** | *None (Independent)* |
 | **3** | `employees.sql` | Employee profile records, personal details, designations, and linkages | **Module 4 (ACTIVE)** | **Depends on `users` (1:1) & `departments` (N:1)** |
-| **4** | `leave_types.sql` | Standard organizational leave policies (Annual, Sick, Casual, Maternity, Paternity) | *Module 6 (Planned)* | *None* |
-| **5** | `attendance.sql` | Sample 30-day clock-in/out logs, shift records, and punctuality flags | *Module 5 (Planned)* | **Depends on `employees`** |
+| **4** | `attendance.sql` | Multi-day clock-in/out logs, shift records, working minutes, and punctuality flags | **Module 5 (ACTIVE)** | **Depends on `employees` (N:1)** |
+| **5** | `leave_types.sql` | Standard organizational leave policies (Annual, Sick, Casual, Maternity, Paternity) | *Module 6 (Planned)* | *None* |
 | **6** | `leave_requests.sql` | Demonstration leave applications in various states (Approved, Pending, Rejected) | *Module 7 (Planned)* | **Depends on `employees` & `leave_types`** |
 | **7** | `payroll.sql` | Salary structure templates, monthly pay runs, deductions, and itemized sample payslips | *Module 8 (Planned)* | **Depends on `employees`** |
 | **8** | `notifications.sql` | Sample system alerts, broadcast notifications, and unread indicator events | *Module 9 (Planned)* | **Depends on `users` / `employees`** |
 
-> ⚠️ **Important:** Do NOT manually create seed files for unreleased modules. They will be added systematically as each corresponding table schema is implemented.
+> ⚠️ **Dependency Rule:** Attendance records require valid `employees.id` references to exist prior to insertion. Seeding `attendance.sql` must strictly occur after `employees.sql`.
 
 ---
 
