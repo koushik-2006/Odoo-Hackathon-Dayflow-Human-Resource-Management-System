@@ -3,9 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn, ShieldAlert, Sparkles, UserCheck, ShieldCheck, UserCog } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
+import SpecularButton from '../../components/ui/SpecularButton';
 
 export default function Login() {
   const { login } = useAuth();
@@ -192,16 +192,22 @@ export default function Login() {
             </Link>
           </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            isLoading={isLoading}
-            className="w-full mt-2"
-            icon={LogIn}
-          >
-            Sign In to Portal
-          </Button>
+          <div className="pt-2">
+            <SpecularButton
+              type="submit"
+              size="lg"
+              radius={16}
+              baseColor="#6366f1"
+              lineColor="#ffffff"
+              textColor="#ffffff"
+              intensity={1.2}
+              disabled={isLoading}
+              className="w-full"
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              {isLoading ? 'Signing In...' : 'Sign In to Portal'}
+            </SpecularButton>
+          </div>
         </form>
 
         <div className="pt-4 border-t border-slate-800/80 text-center text-xs text-slate-400">
