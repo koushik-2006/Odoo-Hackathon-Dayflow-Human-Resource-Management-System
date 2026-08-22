@@ -35,20 +35,20 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Transactional
     public CheckInResponse checkIn(Long userId) {
         Employee employee = employeeRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found for user ID: " + userId));
 
         LocalDate today = LocalDate.now();
-        Optional<Attendance> existing = attendanceRepository.findByEmployeeAndDate(employee, today);
+        Optional<Attendance> existing = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
         if (existing.isPresent()) {
-            throw new BadRequestException("You have already checked in for today (" + today + ")");
+            throw new BadRequestException("Employee already checked in for today (" + today + ")");
         }
 
         LocalDateTime now = LocalDateTime.now();
         Attendance attendance = Attendance.builder()
                 .employee(employee)
-                .date(today)
+                .attendanceDate(today)
                 .checkIn(now)
-                .status(now.getHour() >= 10 ? AttendanceStatus.LATE : AttendanceStatus.PRESENT)
+                .status(AttendanceStatus.PRESENT)
                 .build();
 
         Attendance saved = attendanceRepository.save(attendance);
@@ -65,14 +65,14 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Transactional
     public CheckOutResponse checkOut(Long userId) {
         Employee employee = employeeRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found for user ID: " + userId));
 
         LocalDate today = LocalDate.now();
-        Attendance attendance = attendanceRepository.findByEmployeeAndDate(employee, today)
+        Attendance attendance = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today)
                 .orElseThrow(() -> new BadRequestException("No active check-in record found for today. Please check in first."));
 
         if (attendance.getCheckOut() != null) {
-            throw new BadRequestException("You have already checked out for today.");
+            throw new BadRequestException("Employee already checked out for today.");
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -80,7 +80,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         long minutes = Duration.between(attendance.getCheckIn(), now).toMinutes();
         double hours = Math.round((minutes / 60.0) * 100.0) / 100.0;
-        attendance.setWorkHours(hours);
+        attendance.setWorkingHours(hours);
 
         Attendance saved = attendanceRepository.save(attendance);
 
@@ -89,7 +89,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .checkOutTime(saved.getCheckOut())
                 .totalHours(hours)
                 .status(saved.getStatus().name())
-                .message("Checked out successfully. Total work hours: " + hours + " hrs")
+                .message("Checked out successfully. Total working hours: " + hours + " hrs")
                 .build();
     }
 
@@ -97,8 +97,8 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Transactional(readOnly = true)
     public List<AttendanceResponse> getMyAttendanceHistory(Long userId) {
         Employee employee = employeeRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found"));
-        return attendanceRepository.findByEmployeeOrderByDateDesc(employee).stream()
+                .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found for user ID: " + userId));
+        return attendanceRepository.findByEmployeeOrderByAttendanceDateDesc(employee).stream()
                 .map(attendanceMapper::toResponse)
                 .collect(Collectors.toList());
     }
@@ -106,7 +106,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional(readOnly = true)
     public List<AttendanceResponse> getAttendanceByDate(LocalDate date) {
-        return attendanceRepository.findByDate(date).stream()
+        return attendanceRepository.findByAttendanceDate(date).stream()
                 .map(attendanceMapper::toResponse)
                 .collect(Collectors.toList());
     }

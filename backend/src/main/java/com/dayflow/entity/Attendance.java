@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "attendance", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"employee_id", "date"})
+    @UniqueConstraint(columnNames = {"employee_id", "attendance_date"})
 })
 @Getter
 @Setter
@@ -28,8 +28,8 @@ public class Attendance {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
-    @Column(nullable = false)
-    private LocalDate date;
+    @Column(name = "attendance_date", nullable = false)
+    private LocalDate attendanceDate;
 
     @Column(name = "check_in")
     private LocalDateTime checkIn;
@@ -37,12 +37,14 @@ public class Attendance {
     @Column(name = "check_out")
     private LocalDateTime checkOut;
 
-    @Column(name = "work_hours")
-    private Double workHours;
+    @Column(name = "working_hours")
+    private Double workingHours;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private AttendanceStatus status = AttendanceStatus.PRESENT;
+
+    private String remarks;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -51,4 +53,22 @@ public class Attendance {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // Backward-compatibility helper for 'date'
+    public LocalDate getDate() {
+        return attendanceDate;
+    }
+
+    public void setDate(LocalDate date) {
+        this.attendanceDate = date;
+    }
+
+    // Backward-compatibility helper for 'workHours'
+    public Double getWorkHours() {
+        return workingHours;
+    }
+
+    public void setWorkHours(Double workHours) {
+        this.workingHours = workHours;
+    }
 }
