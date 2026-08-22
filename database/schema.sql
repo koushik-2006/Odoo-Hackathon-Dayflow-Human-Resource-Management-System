@@ -3,8 +3,8 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Current Module: MODULE 5 — ATTENDANCE (COMPLETED)
--- Next Module: MODULE 6 — LEAVE TYPES
+-- Current Module: MODULE 6 — LEAVE TYPES (COMPLETED)
+-- Next Module: MODULE 7 — LEAVE REQUESTS
 -- ==============================================================================
 -- Description:
 -- Master schema definition file for the Dayflow HRMS PostgreSQL database.
@@ -212,6 +212,43 @@ BEFORE UPDATE ON attendance
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
+-- ------------------------------------------------------------------------------
+-- MODULE 6: leave_types
+-- Purpose: Master organization-wide leave categories, paid flags, and baseline days.
+-- Characteristics: Master/reference table (generic, no employee-specific data).
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS leave_types (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    is_paid BOOLEAN NOT NULL DEFAULT TRUE,
+    default_days INTEGER NOT NULL DEFAULT 0,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_leave_types_code UNIQUE (code),
+    CONSTRAINT uq_leave_types_name UNIQUE (name),
+    CONSTRAINT chk_leave_types_code CHECK (
+        LENGTH(TRIM(code)) > 0 AND code ~ '^[A-Z0-9_-]+$'
+    ),
+    CONSTRAINT chk_leave_types_name CHECK (
+        LENGTH(TRIM(name)) > 0
+    ),
+    CONSTRAINT chk_leave_types_default_days CHECK (
+        default_days >= 0
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_leave_types_is_active ON leave_types(is_active);
+
+DROP TRIGGER IF EXISTS trg_leave_types_updated_at ON leave_types;
+CREATE TRIGGER trg_leave_types_updated_at
+BEFORE UPDATE ON leave_types
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
 -- ==============================================================================
 -- PLANNED DATABASE MODULES SPECIFICATION
 -- ==============================================================================
@@ -220,20 +257,18 @@ EXECUTE FUNCTION update_updated_at_column();
 -- 2. MODULE: departments [STATUS: IMPLEMENTED in Module 3]
 -- 3. MODULE: employees [STATUS: IMPLEMENTED in Module 4]
 -- 4. MODULE: attendance [STATUS: IMPLEMENTED in Module 5]
+-- 5. MODULE: leave_types [STATUS: IMPLEMENTED in Module 6]
 --
--- 5. MODULE: leave_types [STATUS: NEXT - Module 6]
---    Purpose: Configuration of organization-wide leave policies.
---    Scope:
---      - Leave type names (e.g., Annual Leave, Sick Leave, Maternity, Paternity, Casual).
---      - Allocation allowances per calendar/fiscal year.
---      - Policy flags (paid vs. unpaid, carry-forward eligibility, encashment limits).
---
--- 6. MODULE: leave_requests [STATUS: PLANNED - Module 7]
---    Purpose: Leave application lifecycle and approval workflows.
---    Scope:
---      - Application submissions (employee, leave_type, start_date, end_date, reason).
---      - Workflow state tracking (PENDING, APPROVED, REJECTED, CANCELLED).
---      - Approval hierarchy logs (manager review notes, approver employee ID, action timestamp).
+-- 6. MODULE: leave_requests [STATUS: NEXT - Module 7]
+--    Purpose: Leave application lifecycle, approval workflows, and date ranges.
+--    Expected Architecture:
+--      - id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+--      - employee_id UUID NOT NULL -> REFERENCES employees(id)
+--      - leave_type_id UUID NOT NULL -> REFERENCES leave_types(id)
+--      - start_date DATE NOT NULL, end_date DATE NOT NULL
+--      - reason TEXT, status (PENDING, APPROVED, REJECTED, CANCELLED)
+--      - approver_id UUID NULL -> REFERENCES employees(id)
+--    [NOTE: NOT implemented yet; will be created in Module 7]
 --
 -- 7. MODULE: payroll [STATUS: PLANNED - Module 8]
 --    Purpose: Compensation structures, recurring salary processing, and payslip generation.

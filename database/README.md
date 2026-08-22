@@ -2,8 +2,8 @@
 
 > **Project Name:** Dayflow - Human Resource Management System  
 > **Tagline:** *Every workday, perfectly aligned.*  
-> **Current Status:** Modules 1, 2, 3, 4, 5 (COMPLETE)  
-> **Next Module:** Module 6 — Leave Types (NEXT)  
+> **Current Status:** Modules 1, 2, 3, 4, 5, 6 (COMPLETE)  
+> **Next Module:** Module 7 — Leave Requests (NEXT)  
 > **Database Engine:** PostgreSQL (Version 14+)  
 > **Database Name:** `dayflow`  
 > **Default Host:** `localhost`  
@@ -19,7 +19,8 @@ The **Dayflow HRMS** PostgreSQL database serves as the centralized, reliable, an
 - **Organizational Structure & Departments (Module 3):** Multi-department mapping, normalized department codes, team divisions, and soft-deactivation tracking.
 - **Employee Lifecycle (Module 4):** Comprehensive employee profiles, 1:1 user linkage, personal & contact records, employee codes, designations, and department assignments.
 - **Time & Attendance (Module 5):** Real-time daily clock-in/out tracking, working duration calculations, presence statuses (`PRESENT`, `ABSENT`, `HALF_DAY`, `LEAVE`), daily uniqueness guarantees, and history views.
-- **Leave Management (Module 6 & 7):** Custom leave policies, quota tracking, multi-tier approval workflows, and audit history.
+- **Leave Types & Policy Configuration (Module 6):** Standardized leave categories (`PAID`, `SICK`, `UNPAID`), compensation rules (`is_paid`), annual baseline entitlements (`default_days`), and operational toggles (`is_active`).
+- **Leave Requests & Approval Lifecycle (Module 7):** Custom leave applications, date span tracking, multi-tier approval workflows, and audit history.
 - **Payroll & Compensation (Module 8):** Flexible salary structures, automated deductions, monthly pay run processing, and itemized payslip generation.
 - **Notifications & Communication (Module 9):** Targeted system alerts, broadcast announcements, and delivery status tracking across channels.
 - **Document Management (Module 10):** Employee records, identity proofs, contract lifecycle, and HR policy file tracking.
@@ -32,10 +33,6 @@ The **Dayflow HRMS** PostgreSQL database serves as the centralized, reliable, an
 ### Module 2: Users (Core Authentication)
 The `users` table handles authentication, login credentials, and account operational status.
 
-- **Role Model (Strict Dayflow RBAC):**
-  - `ADMIN`: Full administrative control across the HRMS.
-  - `HR`: Human resources operational access.
-  - `EMPLOYEE`: Standard employee access.
 - **Columns:**
   - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
   - `email`: `VARCHAR(255) NOT NULL UNIQUE`
@@ -97,19 +94,32 @@ The `attendance` table captures daily work logs, check-in/out timestamps, and at
 - **Columns:**
   - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
   - `employee_id`: `UUID NOT NULL` (N:1 with `employees.id`)
-  - `attendance_date`: `DATE NOT NULL` (Actual work date)
-  - `check_in`: `TIMESTAMPTZ NULL` (Timezone-aware check-in timestamp)
-  - `check_out`: `TIMESTAMPTZ NULL` (Timezone-aware check-out timestamp)
+  - `attendance_date`: `DATE NOT NULL` (Work date)
+  - `check_in`: `TIMESTAMPTZ NULL` (Check-in timestamp)
+  - `check_out`: `TIMESTAMPTZ NULL` (Check-out timestamp)
   - `status`: `VARCHAR(30) NOT NULL DEFAULT 'PRESENT'` (`PRESENT`, `ABSENT`, `HALF_DAY`, `LEAVE`)
-  - `working_minutes`: `INTEGER NULL` (Total calculated work duration in integer minutes $\ge 0$)
-  - `remarks`: `TEXT NULL` (Optional reason/notes)
+  - `working_minutes`: `INTEGER NULL` (Calculated work duration in integer minutes $\ge 0$)
+  - `remarks`: `TEXT NULL`
   - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
   - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
-- **Key Constraints:**
-  - `uq_attendance_employee_date`: Strict daily uniqueness `UNIQUE(employee_id, attendance_date)` preventing multiple records per employee per date.
-  - `fk_attendance_employee`: `FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE RESTRICT`.
-  - `chk_attendance_checkout`: Enforces `check_out >= check_in` when both are present.
-  - `chk_attendance_working_minutes`: Enforces non-negative work duration (`working_minutes >= 0`).
+- **Key Constraints:** `UNIQUE(employee_id, attendance_date)`, `check_out >= check_in`, `working_minutes >= 0`.
+
+---
+
+### Module 6: Leave Types (Master Policy Categories)
+The `leave_types` table stores organizational leave categories and baseline entitlement rules.
+
+- **Columns:**
+  - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `code`: `VARCHAR(50) NOT NULL UNIQUE` (Standard machine identifier e.g., `PAID`, `SICK`, `UNPAID`)
+  - `name`: `VARCHAR(100) NOT NULL UNIQUE` (Display title e.g., "Paid Leave", "Sick Leave", "Unpaid Leave")
+  - `description`: `TEXT NULL` (Policy description)
+  - `is_paid`: `BOOLEAN NOT NULL DEFAULT TRUE` (Compensated vs. uncompensated time off)
+  - `default_days`: `INTEGER NOT NULL DEFAULT 0` (Annual baseline allocation $\ge 0$)
+  - `is_active`: `BOOLEAN NOT NULL DEFAULT TRUE` (Soft deactivation flag)
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at`: `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`
+- **Characteristics:** Master reference table containing no employee-specific data. Serves as the foreign key target for future Module 7 `leave_requests.leave_type_id`.
 
 ---
 
@@ -124,8 +134,8 @@ The `attendance` table captures daily work logs, check-in/out timestamps, and at
 │  Module 3  │ Departments                 │  COMPLETE   │
 │  Module 4  │ Employees                   │  COMPLETE   │
 │  Module 5  │ Attendance                  │  COMPLETE   │
-│  Module 6  │ Leave Types                 │    NEXT     │
-│  Module 7  │ Leave Requests              │   PLANNED   │
+│  Module 6  │ Leave Types                 │  COMPLETE   │
+│  Module 7  │ Leave Requests              │    NEXT     │
 │  Module 8  │ Payroll                     │   PLANNED   │
 │  Module 9  │ Notifications               │   PLANNED   │
 │  Module 10 │ Documents                   │   PLANNED   │
@@ -134,7 +144,7 @@ The `attendance` table captures daily work logs, check-in/out timestamps, and at
 └────────────┴─────────────────────────────┴─────────────┘
 ```
 
-### Entity Relationship Diagram (Modules 2, 3, 4, 5)
+### Entity Relationship Diagram (Modules 2–6)
 
 ```text
     users (Module 2)              departments (Module 3)
@@ -156,27 +166,27 @@ The `attendance` table captures daily work logs, check-in/out timestamps, and at
    │ employee_code    VARCHAR(50) UNIQUE NOT NULL     │
    │ first_name       VARCHAR(100) NOT NULL           │
    │ last_name        VARCHAR(100) NOT NULL           │
-   │ job_title        VARCHAR(100) NOT NULL           │
-   │ joining_date     DATE NOT NULL                   │
    │ employment_status VARCHAR(30) NOT NULL           │
-   └────────────────────────┬─────────────────────────┘
-                            │ 1
-                            │
-                            │ N
-   ┌────────────────────────▼─────────────────────────┐
-   │ attendance (Module 5)                            │
-   │ ------------------------------------------------ │
-   │ id               UUID PRIMARY KEY                │
-   │ employee_id      UUID NOT NULL (FK)              │
-   │ attendance_date  DATE NOT NULL                   │
-   │ check_in         TIMESTAMPTZ NULL                │
-   │ check_out        TIMESTAMPTZ NULL                │
-   │ status           VARCHAR(30) NOT NULL            │
-   │ working_minutes  INTEGER NULL                    │
-   │ remarks          TEXT NULL                       │
-   │ ------------------------------------------------ │
-   │ UNIQUE(employee_id, attendance_date)             │
-   └──────────────────────────────────────────────────┘
+   └────────┬─────────────────────────────────────────┘
+            │ 1
+            │
+            │ N
+   ┌────────▼─────────────────────────┐      leave_types (Module 6)
+   │ attendance (Module 5)            │     ┌─────────────────────┐
+   │ -------------------------------- │     │ id (UUID PK)        │
+   │ id               UUID PRIMARY KEY│     │ code (UQ)           │
+   │ employee_id      UUID NOT NULL FK│     │ name (UQ)           │
+   │ attendance_date  DATE NOT NULL   │     │ is_paid             │
+   │ status           VARCHAR(30)     │     │ default_days        │
+   │ UNIQUE(employee_id, date)        │     │ is_active           │
+   └──────────────────────────────────┘     └──────────┬──────────┘
+                                                       │ 1
+                                                       │ (Future Module 7)
+                                                       │ N
+                                            ┌──────────▼──────────┐
+                                            │ leave_requests      │
+                                            │ (Module 7 - Planned)│
+                                            └─────────────────────┘
 ```
 
 ---
@@ -190,13 +200,15 @@ database/
 │   ├── V1__create_users.sql         # Migration V1: users table (ADMIN, HR, EMPLOYEE)
 │   ├── V2__create_departments.sql   # Migration V2: departments table, triggers, constraints
 │   ├── V3__create_employees.sql     # Migration V3: employees table (1:1 users, N:1 departments)
-│   └── V4__create_attendance.sql    # Migration V4: attendance table (1:N employees, unique date)
+│   ├── V4__create_attendance.sql    # Migration V4: attendance table (1:N employees, unique date)
+│   └── V5__create_leave_types.sql   # Migration V5: leave_types master policy table
 ├── seeds/
 │   ├── README.md                    # Seed data execution dependencies and rules
 │   ├── departments.sql              # Seed data for baseline departments (IT, HR, FIN, MKT, SALES, OPS)
 │   ├── users.sql                    # Seed data for demo user accounts (ADMIN, HR, EMPLOYEE)
 │   ├── employees.sql                # Seed data for demo employee profiles
-│   └── attendance.sql               # Seed data for multi-day employee attendance logs
+│   ├── attendance.sql               # Seed data for multi-day employee attendance logs
+│   └── leave_types.sql              # Seed data for baseline leave categories (PAID, SICK, UNPAID)
 ├── schema.sql                       # Master schema definition & active tables
 ├── seed.sql                         # Master seed orchestration script (strict dependency order)
 └── README.md                        # Master database documentation (this file)
@@ -233,7 +245,7 @@ database/
    psql -U postgres -h localhost -p 5432 -d dayflow -f database/schema.sql
    ```
 
-4. **Apply Seed Data (In Order: Departments $\rightarrow$ Users $\rightarrow$ Employees $\rightarrow$ Attendance):**
+4. **Apply Seed Data (In Dependency Order):**
    ```bash
    psql -U postgres -h localhost -p 5432 -d dayflow -f database/seed.sql
    ```
@@ -291,7 +303,7 @@ DB_TIMEOUT_SECONDS=30
 
 1. **Zero Credential Exposure:** Never commit `.env` files, plaintext passwords, private keys, or connection strings to version control.
 2. **Password Cryptography:** User passwords must always be hashed using modern algorithms (bcrypt/Argon2) with high work factors before insertion into the database.
-3. **Decoupled Architecture:** Authentication credentials remain strictly isolated in the `users` table. Employee profiles and attendance records hold operational data without password columns.
+3. **Decoupled Architecture:** Authentication credentials remain strictly isolated in the `users` table. Employee profiles, attendance logs, and leave policies hold operational metadata without credential columns.
 4. **Principle of Least Privilege:** Production applications should connect using an application-specific user account granted only `DML` privileges (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), rather than the `postgres` superuser.
 5. **Encrypted Transport:** Enable SSL (`DB_SSL_MODE=require` or `verify-full`) for all database connections in staging and production deployments.
 6. **SQL Injection Prevention:** All backend queries must utilize parameterized statements or prepared queries without exception.

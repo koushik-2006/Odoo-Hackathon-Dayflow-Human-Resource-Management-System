@@ -3,7 +3,7 @@
 -- Tagline: Every workday, perfectly aligned.
 -- Database: PostgreSQL
 -- Database Name: dayflow
--- Current Module: MODULE 5 — ATTENDANCE
+-- Current Module: MODULE 6 — LEAVE TYPES
 -- ==============================================================================
 -- Description:
 -- Master seed file for the Dayflow HRMS PostgreSQL database.
@@ -25,10 +25,12 @@
 -- 4. Daily attendance, check-in/out, and timesheet logs (Module 5)
 \ir seeds/attendance.sql
 
+-- 5. Master leave categories & policy allowances (Module 6)
+\ir seeds/leave_types.sql
+
 -- ------------------------------------------------------------------------------
 -- 2. Future Module Seed Sequence (To Be Activated as Tables are Created)
 -- ------------------------------------------------------------------------------
--- \ir seeds/leave_types.sql       -- Organizational leave policy configurations (Module 6)
 -- \ir seeds/leave_requests.sql    -- Demonstration leave applications & approval logs (Module 7)
 -- \ir seeds/payroll.sql           -- Salary configurations & demonstration payslips (Module 8)
 -- \ir seeds/notifications.sql     -- Sample in-app and system broadcast messages (Module 9)
