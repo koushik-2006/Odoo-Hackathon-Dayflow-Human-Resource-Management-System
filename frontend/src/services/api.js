@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { API_BASE_URL, STORAGE_KEYS } from '../utils/constants';
 
+const baseURL = import.meta.env?.VITE_API_BASE_URL || API_BASE_URL || '/api';
+
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -12,7 +14,9 @@ const api = axios.create({
 // Request Interceptor: Attach JWT Bearer Token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+    const token =
+      localStorage.getItem(STORAGE_KEYS?.TOKEN || 'dayflow_token') ||
+      localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -27,8 +31,6 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       // Optional: Clear stored credentials if unauthorized
-      // localStorage.removeItem(STORAGE_KEYS.TOKEN);
-      // localStorage.removeItem(STORAGE_KEYS.USER);
     }
     return Promise.reject(error);
   }

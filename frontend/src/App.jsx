@@ -18,7 +18,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 
-// Employee Pages
+// Employee Pages (Koushik + Manoj)
 import EmployeeDashboard from './pages/employee/Dashboard';
 import Profile from './pages/employee/Profile';
 import EmployeeAttendance from './pages/employee/Attendance';
@@ -26,7 +26,7 @@ import EmployeeLeave from './pages/employee/Leave';
 import EmployeePayroll from './pages/employee/Payroll';
 import EmployeeNotifications from './pages/employee/Notifications';
 
-// Admin & HR Pages
+// Admin & HR Pages (Manoj)
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminEmployees from './pages/admin/Employees';
 import EmployeeDetails from './pages/admin/EmployeeDetails';
