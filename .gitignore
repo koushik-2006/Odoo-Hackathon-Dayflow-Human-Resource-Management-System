@@ -10,6 +10,9 @@ lerna-debug.log*
 # Node & Build
 node_modules/
 dist/
+frontend/dist/
+backend/target/
+target/
 dist-ssr/
 build/
 *.local
