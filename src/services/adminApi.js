@@ -10,12 +10,13 @@ import {
 } from '../data/dummyAdminData';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const API_BASE = import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 export const adminApi = {
   // Dashboard Metrics & Charts
   getDashboardStats: async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/admin/dashboard/stats');
+      const res = await fetch(`${API_BASE}/admin/dashboard/stats`);
       const data = await res.json();
       if (data.success) {
         return data;
@@ -28,7 +29,7 @@ export const adminApi = {
   },
   getAttendanceOverview: async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/admin/dashboard/attendance-summary');
+      const res = await fetch(`${API_BASE}/admin/dashboard/attendance-summary`);
       const data = await res.json();
       if (data.success) {
         return [
@@ -45,7 +46,7 @@ export const adminApi = {
   },
   getLeaveOverview: async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/admin/dashboard/leave-summary');
+      const res = await fetch(`${API_BASE}/admin/dashboard/leave-summary`);
       const data = await res.json();
       if (data.success) {
         return [
@@ -61,7 +62,7 @@ export const adminApi = {
   },
   getDepartmentDistribution: async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/admin/dashboard/departments');
+      const res = await fetch(`${API_BASE}/admin/dashboard/departments`);
       const data = await res.json();
       if (data.success) {
         return data.departments;
@@ -81,7 +82,7 @@ export const adminApi = {
       if (filters.role) queryParams.append('role', filters.role);
       if (filters.status) queryParams.append('status', filters.status);
       
-      const res = await fetch(`http://localhost:5000/api/admin/employees?${queryParams.toString()}`);
+      const res = await fetch(`${API_BASE}/admin/employees?${queryParams.toString()}`);
       const data = await res.json();
       if (data.success) {
         return data.employees;
@@ -94,7 +95,7 @@ export const adminApi = {
   },
   getEmployee: async (id) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/employees/${id}`);
+      const res = await fetch(`${API_BASE}/admin/employees/${id}`);
       const data = await res.json();
       if (data.success) {
         return {
@@ -113,7 +114,7 @@ export const adminApi = {
   },
   updateEmployee: async (id, updatedFields) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/employees/${id}`, {
+      const res = await fetch(`${API_BASE}/admin/employees/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -134,7 +135,7 @@ export const adminApi = {
   },
   toggleEmployeeStatus: async (id, newStatus) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/employees/${id}/status`, {
+      const res = await fetch(`${API_BASE}/admin/employees/${id}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
@@ -198,7 +199,7 @@ export const adminApi = {
   // Payroll
   getPayroll: async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/admin/payroll');
+      const res = await fetch(`${API_BASE}/admin/payroll`);
       const data = await res.json();
       if (data.success) {
         return data.payroll;
@@ -210,7 +211,7 @@ export const adminApi = {
   },
   updatePayroll: async (employeeId, updatedFields) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/payroll/${employeeId}`, {
+      const res = await fetch(`${API_BASE}/admin/payroll/${employeeId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -231,7 +232,7 @@ export const adminApi = {
   },
   getMyPayroll: async (mockTokenId = 'EMP001') => {
     try {
-      const res = await fetch('http://localhost:5000/api/payroll/me', {
+      const res = await fetch(`${API_BASE}/payroll/me`, {
         headers: {
           'Authorization': `Bearer ${mockTokenId}`
         }
