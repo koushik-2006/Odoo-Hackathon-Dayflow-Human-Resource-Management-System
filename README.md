@@ -26,14 +26,13 @@ The React/Vite frontend is built and deployed automatically via GitHub Actions:
 Odoo-Hackathon-Dayflow-Human-Resource-Management-System/
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml          # GitHub Actions workflow deploying frontend/dist
-├── frontend/                   # React 19 + Vite 6 + Tailwind CSS v4
-│   ├── public/                 # Static assets (favicon, icons, 404.html SPA handler)
-│   ├── src/                    # UI Components, WebGL shaders, Pages, Context, Services
-│   ├── index.html              # Frontend DOM entry point & SPA redirect decoder
-│   ├── package.json            # Frontend dependencies & npm scripts
-│   ├── package-lock.json       # Locked frontend dependencies
-│   └── vite.config.js          # Vite configuration with GitHub Pages base path
+│       └── deploy-frontend.yml # GitHub Actions workflow deploying dist to GitHub Pages
+├── public/                     # Static assets (favicon, icons, 404.html SPA handler)
+├── src/                        # React 19 UI Components, WebGL shaders, Pages, Context, Services
+├── index.html                  # Frontend DOM entry point & SPA redirect decoder
+├── package.json                # Frontend dependencies & npm scripts
+├── package-lock.json           # Locked frontend dependencies
+├── vite.config.js              # Vite configuration with GitHub Pages base path
 ├── backend/                    # Spring Boot 3 Java 17 + Node.js Express server
 │   ├── pom.xml                 # Spring Boot Maven configuration
 │   ├── src/                    # Spring Boot entities, controllers, services, migrations
@@ -111,7 +110,6 @@ npm run dev
 
 ### Step 3: Frontend (React + Vite — Port 3000)
 ```bash
-cd frontend
 npm install --legacy-peer-deps
 npm run dev
 ```
@@ -139,9 +137,10 @@ cp .env.example .env
 
 ## 🌐 GitHub Pages Deployment Details
 
-The `.github/workflows/deploy.yml` workflow automatically builds `frontend/` and publishes `frontend/dist` to GitHub Pages:
-- **Base Path:** `/Odoo-Hackathon-Dayflow-Human-Resource-Management-System/` configured in `frontend/vite.config.js`.
-- **SPA Fallback:** `frontend/public/404.html` and `frontend/index.html` handle direct navigation and page refreshes on sub-routes without 404 errors.
+The `.github/workflows/deploy-frontend.yml` workflow automatically builds the project at root and publishes `dist` to GitHub Pages on every push to `main`:
+- **Source setting in GitHub repository:** Settings ➔ Pages ➔ Build and deployment ➔ Source: **GitHub Actions** (recommended for Vite/React single-page apps)
+- **Base Path:** `/Odoo-Hackathon-Dayflow-Human-Resource-Management-System/` configured in `vite.config.js`.
+- **SPA Fallback:** `public/404.html` and `index.html` handle direct navigation and page refreshes on sub-routes without 404 errors.
 
 ---
 
