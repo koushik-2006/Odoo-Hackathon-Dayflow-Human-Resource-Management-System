@@ -14,7 +14,7 @@ The React/Vite frontend is built and deployed automatically via GitHub Actions:
 🔗 **Live Application:** [https://koushik-2006.github.io/Odoo-Hackathon-Dayflow-Human-Resource-Management-System/](https://koushik-2006.github.io/Odoo-Hackathon-Dayflow-Human-Resource-Management-System/)
 
 > ⚠️ **Architecture & Hosting Notice**  
-> - **GitHub Pages hosts only the static compiled frontend (`frontend/dist`)**.  
+> - **GitHub Pages hosts the static compiled frontend from `docs/` (or via GitHub Actions)**.  
 > - The **Spring Boot (Java 17)** / **Node.js Express** backend and **PostgreSQL** database run on a dedicated server environment or local machine.  
 > - The frontend features an **intelligent offline fallback system**: if the backend server is unreachable, mock datasets automatically populate all views for seamless demonstration and testing.
 
@@ -26,7 +26,13 @@ The React/Vite frontend is built and deployed automatically via GitHub Actions:
 Odoo-Hackathon-Dayflow-Human-Resource-Management-System/
 ├── .github/
 │   └── workflows/
-│       └── deploy-frontend.yml # GitHub Actions workflow deploying dist to GitHub Pages
+│       └── deploy-frontend.yml # GitHub Actions workflow deploying docs to GitHub Pages
+├── docs/                       # Static production build files for GitHub Pages
+│   ├── assets/                 # Compiled JavaScript and CSS bundles
+│   ├── index.html              # Built production HTML entry point
+│   ├── 404.html                # Single Page App routing fallback
+│   ├── favicon.svg             # App favicon
+│   └── icons.svg               # SVG icons asset
 ├── public/                     # Static assets (favicon, icons, 404.html SPA handler)
 ├── src/                        # React 19 UI Components, WebGL shaders, Pages, Context, Services
 ├── index.html                  # Frontend DOM entry point & SPA redirect decoder

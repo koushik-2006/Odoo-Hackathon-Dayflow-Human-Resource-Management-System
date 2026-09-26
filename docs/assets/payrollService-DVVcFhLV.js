@@ -1,0 +1,1 @@
+import{a as r}from"./index-ENNF6Q8H.js";const o=async()=>{try{return(await r.get("/payroll/me")).data}catch(a){return console.warn("Backend API unavailable, using fallback data for getMyPayroll:",a.message),null}};export{o as g};

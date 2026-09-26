@@ -20,6 +20,8 @@ export default defineConfig(({ command, mode }) => ({
     open: true,
   },
   build: {
+    outDir: 'docs',
+    emptyOutDir: true,
     rollupOptions: {
       output: {
         manualChunks: {
