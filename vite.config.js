@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 // https://vite.dev/config/
-export default defineConfig({
-  base: process.env.NODE_ENV === 'production'
+export default defineConfig(({ command, mode }) => ({
+  base: command === 'build' || mode === 'production'
     ? '/Odoo-Hackathon-Dayflow-Human-Resource-Management-System/'
     : '/',
   plugins: [
@@ -13,6 +13,10 @@ export default defineConfig({
   ],
   server: {
     port: 3000,
+    open: true,
+  },
+  preview: {
+    port: 4173,
     open: true,
   },
   build: {
@@ -27,4 +31,4 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1000,
   },
-});
+}));
